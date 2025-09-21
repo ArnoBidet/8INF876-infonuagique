@@ -1,4 +1,4 @@
-package edu.uqac.gri.netreflect;
+package util;
 
 import java.io.File;
 import java.io.FileInputStream;
