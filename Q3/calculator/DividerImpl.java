@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 public class DividerImpl extends UnicastRemoteObject implements Divider {
-    protected DividerImpl() throws RemoteException {
+    public DividerImpl() throws RemoteException {
         super();
     }
 

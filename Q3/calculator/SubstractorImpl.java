@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 public class SubstractorImpl extends UnicastRemoteObject implements Substractor {
-    protected SubstractorImpl() throws RemoteException {
+    public SubstractorImpl() throws RemoteException {
         super();
     }
 

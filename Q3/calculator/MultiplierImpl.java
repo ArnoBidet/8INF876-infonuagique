@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 public class MultiplierImpl extends UnicastRemoteObject implements Multiplier {
-    protected MultiplierImpl() throws RemoteException {
+    public MultiplierImpl() throws RemoteException {
         super();
     }
 
