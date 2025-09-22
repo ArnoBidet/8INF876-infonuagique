@@ -1,13 +1,15 @@
 package calculator;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 
-public interface Substractor extends Remote {
-    /**
-     * @param a The substracted
-     * @param b The substractor
-     * @return The subtraction of a - b
-     */
-    int subtract(int a, int b) throws RemoteException ;
+public class Substractor extends UnicastRemoteObject implements SubstractorRemote {
+    public Substractor() throws RemoteException {
+        super();
+    }
+
+    @Override
+    public int subtract(int a, int b) {
+        return a - b;
+    }
 }

@@ -8,10 +8,10 @@ public class Server implements AgentInterface {
         System.out.println("Vous avez lancé un serveur.");
         System.setSecurityManager(new SecurityManager());
         try {
-            Adder ai = new AdderImpl();
-            Substractor si = new SubstractorImpl();
-            Multiplier mi = new MultiplierImpl();
-            Divider di = new DividerImpl();
+            AdderRemote ai = new Adder();
+            SubstractorRemote si = new Substractor();
+            MultiplierRemote mi = new Multiplier();
+            DividerRemote di = new Divider();
             Naming.rebind("adder", ai);
             Naming.rebind("substractor", si);
             Naming.rebind("multiplier", mi);

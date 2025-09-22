@@ -1,13 +1,18 @@
 package calculator;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 
-public interface Divider extends Remote {
-    /**
-     * @param a The numerator
-     * @param b The denumerator
-     * @return The quotient
-     */
-    double divide(int a, int b) throws ZeroDivisionException, RemoteException ;
+public class Divider extends UnicastRemoteObject implements DividerRemote {
+    public Divider() throws RemoteException {
+        super();
+    }
+
+    public double divide(int a, int b) throws ZeroDivisionException {
+        try {
+            return a / b;
+        } catch (Exception e) {
+            throw new ZeroDivisionException();
+        }
+    }
 }

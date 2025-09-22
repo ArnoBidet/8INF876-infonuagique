@@ -1,13 +1,15 @@
 package calculator;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 
-public interface Multiplier extends Remote {
-    /**
-     * @param a The first factor
-     * @param b The second factor
-     * @return The multiplication of a * b
-     */
-    int multiply(int a, int b) throws RemoteException;
+public class Multiplier extends UnicastRemoteObject implements MultiplierRemote {
+    public Multiplier() throws RemoteException {
+        super();
+    }
+
+    public int multiply(int a, int b) {
+        return a * b;
+
+    }
 }

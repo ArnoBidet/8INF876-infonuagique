@@ -1,5 +1,5 @@
 package calculator;
 
-public class ZeroDivisionException extends Error {
+public class ZeroDivisionException extends Exception {
 
 }
