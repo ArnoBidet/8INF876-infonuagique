@@ -1,6 +1,7 @@
 package calculator;
 
 import java.rmi.Remote;
+import java.rmi.RemoteException;
 
 public interface Adder extends Remote {
     /**
@@ -8,5 +9,5 @@ public interface Adder extends Remote {
      * @param b The second
      * @return The value of a + b
      */
-    int add(int a, int b);
+    int add(int a, int b) throws RemoteException;
 }

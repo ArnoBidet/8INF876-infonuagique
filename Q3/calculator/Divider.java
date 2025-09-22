@@ -1,6 +1,7 @@
 package calculator;
 
 import java.rmi.Remote;
+import java.rmi.RemoteException;
 
 public interface Divider extends Remote {
     /**
@@ -8,5 +9,5 @@ public interface Divider extends Remote {
      * @param b The denumerator
      * @return The quotient
      */
-    double divide(int a, int b) throws ZeroDivisionException;
+    double divide(int a, int b) throws ZeroDivisionException, RemoteException ;
 }
