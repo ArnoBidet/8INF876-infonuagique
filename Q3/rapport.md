@@ -4,6 +4,27 @@ Un sujet par :
 - Arno BIDET
 - Antoine MAMOU
 
+## tl;dr
+
+Nécessaire :
+- [Java >= 1.8](https://openjdk.org/install/)
+- [Make](https://en.wikipedia.org/wiki/Make_(software)) installé dans l'idéal.
+
+Pour initialiser : 
+```sh
+make compile
+```
+
+Pour lancer le registre RMI :
+```sh
+make start-rmi
+```
+
+Il faudra lancer deux terminaux pour simuler et lancer la commande suivante dans chacun d'entre eux :
+```sh
+java Main
+```
+
 ## Sommaire
 
 1. [Rappel du sujet](#rappel-du-sujet)
@@ -58,7 +79,7 @@ Le serveur extrait les informations nécessaires (par exemple, classe en code oc
 Mots clés : `Socket`, `RMI`, `Thread`, `InputStream`, `FileInputStream`, `Réflexion`,  `OutputStream`.
 
 Livrables (en place): utilisez clé USB pour remettre ce TP1, qui sera corrigé en classe. 
-1. Code complet en Java avec commentaires   80% 
+1. Code complet en Java avec commentaires 80% 
 2. Guide d'utilisation et trace d'exécution de l'application 20%
 
 Remarque : Exécution et démonstration en classe par l’étudiant.
