@@ -10,6 +10,7 @@ public class Divider extends UnicastRemoteObject implements DividerRemote {
 
     public double divide(int a, int b) throws ZeroDivisionException {
         try {
+            System.out.println("Calculation of " + a + " / "+ b );
             return a / b;
         } catch (Exception e) {
             throw new ZeroDivisionException();

@@ -10,6 +10,7 @@ public class Substractor extends UnicastRemoteObject implements SubstractorRemot
 
     @Override
     public int subtract(int a, int b) {
+        System.out.println("Calculation of " + a + " - "+ b );
         return a - b;
     }
 }
