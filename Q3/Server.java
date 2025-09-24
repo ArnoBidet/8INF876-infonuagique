@@ -6,7 +6,9 @@ public class Server implements AgentInterface {
     @Override
     public void start() {
         System.out.println("Vous avez lancé un serveur.");
+        System.setProperty("java.security.policy","./security.policy");
         System.setSecurityManager(new SecurityManager());
+
         try {
             AdderRemote ai = new Adder();
             SubstractorRemote si = new Substractor();
