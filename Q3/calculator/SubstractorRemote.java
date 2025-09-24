@@ -7,7 +7,7 @@ public interface SubstractorRemote extends Remote {
     /**
      * @param a The substracted
      * @param b The substractor
-     * @return The subtraction of a - b
+     * @return The substraction of a - b
      */
-    int subtract(int a, int b) throws RemoteException ;
+    int substract(int a, int b) throws RemoteException ;
 }
