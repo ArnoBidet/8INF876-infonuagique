@@ -2,6 +2,8 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 
 import calculator.AdderRemote;
+import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
 import java.util.Scanner;
 
 public class Client implements AgentInterface {
@@ -44,7 +46,8 @@ public class Client implements AgentInterface {
         try {
             String url = new String("rmi://localhost/" + serviceName);
             result = (T) Naming.lookup(url);
-        } catch (Exception e) {
+            System.out.println(result.toString());
+        } catch (MalformedURLException | NotBoundException | RemoteException e) {
             System.out.println("Erreur a l'accès du gest. banc." + e);
         }
         return result;
