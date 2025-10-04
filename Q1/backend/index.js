@@ -96,7 +96,7 @@ const server = http.createServer(async (req, res) => {
         // Save to database
         const [result] = await pool.execute(
           'INSERT INTO imc (username, height, weight, imc) VALUES (?, ?, ?, ?)',
-          [username || 'anonymous', height, weight, imcRounded]
+          [username || 'anonymous', height*100, weight, imcRounded]
         );
 
         res.statusCode = 200;

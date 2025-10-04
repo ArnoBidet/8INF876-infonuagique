@@ -1,10 +1,12 @@
 document.getElementById("imcForm").addEventListener("submit", function(e) {
     e.preventDefault(); // Empêche le rechargement de la page
 
+    const username = document.getElementById("username").value;
     const poids = parseFloat(document.getElementById("weight").value);
     const taille = parseFloat(document.getElementById("height").value);
-
-    console.log(taille,poids);
+    
+    console.log("username:", username);
+    console.log(taille,poids,username);
 
     if (poids > 0 && taille > 0) {
         fetch("http://localhost:3000/imc", {
@@ -12,7 +14,7 @@ document.getElementById("imcForm").addEventListener("submit", function(e) {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ weight: poids, height: taille })
+            body: JSON.stringify({ weight: poids, height: taille, username: username })
         })
         .then(response => response.json())
         .then(data => {
@@ -20,9 +22,17 @@ document.getElementById("imcForm").addEventListener("submit", function(e) {
                 document.getElementById("result").innerHTML = 
                     `<p style="color:red;">${data.error}</p>`;
             } else {
-                document.getElementById("result").innerHTML = 
+                if(username !== ""){
+                    document.getElementById("result").innerHTML = 
+                    `<p><strong>${username}</strong>, votre IMC est : <strong>${data.imc.toFixed(2)}</strong></p>
+                     <p>Interprétation : ${data.category}</p>`;
+                }
+                else{
+                    document.getElementById("result").innerHTML = 
                     `<p>Votre IMC est : <strong>${data.imc.toFixed(2)}</strong></p>
                      <p>Interprétation : ${data.category}</p>`;
+                }
+                
             }
             document.getElementById("result").style.display = "block";
         })
