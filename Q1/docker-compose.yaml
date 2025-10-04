@@ -8,6 +8,7 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
   backend:
     image : node:24-alpine3.21
@@ -22,7 +23,7 @@ services:
       - "3000:3000"
     depends_on:
       - db
-    command: npm run start
+    command: sh -c "npm i && npm run start"
     
   frontend:
     image: nginx:alpine
