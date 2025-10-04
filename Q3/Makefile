@@ -1,6 +1,9 @@
 clean:
 	find . -name "*.class" -delete
 
+start-instance:
+	java Main
+
 compile:
 	javac -d . calculator/Adder.java && rmic calculator.Adder &&\
 	javac -d . calculator/Substractor.java && rmic calculator.Substractor &&\
