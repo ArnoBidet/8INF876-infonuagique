@@ -11,6 +11,21 @@ Un sujet par :
 2. [Sources à disposition](#sources-à-disposition)
 3. [Annexes](#annexes)
 
+## Nécessaire
+
+- Java JDK 1.8 (par ligne de commande : `sudo apt install openjdk-8-jdk-headless`)
+- RMIC (installé par défaut avec JAVA)
+
+Attentionm vous devez avoir la même version de java et javac. Pour vérifier `java -version` et `javac -version`. Si l'une des deux n'est pas bonne, utiliser `sudo update-alternatives --config java` ou `sudo update-alternatives --config javac` pour alligner les vesrions.
+
+## Lancement rapide
+
+- Se positionner dans Q3
+- `make compile`
+- Ouvrir 2 autres terminales, appelons les 0, 1 et 2.
+- Terminal 0 : `make start-rmic`
+- Terminal 1 : 
+
 ## Rappel du sujet 
 
 Le but de cette question est de familiariser l’étudiant 
