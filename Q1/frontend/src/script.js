@@ -9,7 +9,7 @@ document.getElementById("imcForm").addEventListener("submit", function(e) {
     console.log(taille,poids,username);
 
     if (poids > 0 && taille > 0) {
-        fetch("http://localhost:3000/imc", {
+        fetch("__API_URL__/imc", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
