@@ -51,8 +51,10 @@ public class Client implements AgentInterface {
                 }
                 System.out.println("Result : " + result);
             } catch (RemoteException e) {
+                System.err.println("RemoteException occurred: " + e.getMessage());
                 e.printStackTrace();
             } catch (ZeroDivisionException e) {
+                System.err.println("ZeroDivisionException occurred: " + e.getMessage());
                 e.printStackTrace();
             }
         } while (!input.equals("q"));
