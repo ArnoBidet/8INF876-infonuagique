@@ -25,7 +25,6 @@ const dbConfig = {
   queueLimit: 0
 };
 
-console.log(dbConfig);
 // Create connection pool
 const pool = mysql.createPool(dbConfig);
 
