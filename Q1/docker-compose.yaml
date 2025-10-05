@@ -33,7 +33,7 @@ services:
     restart: always
     env_file: .env
     ports:
-      - "8080:80"
+      - "8082:80"
     depends_on:
       - backend
 
