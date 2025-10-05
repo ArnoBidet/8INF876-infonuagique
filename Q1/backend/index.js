@@ -50,7 +50,7 @@ async function waitForDatabase() {
 
 // Create a server instance
 const server = http.createServer(async (req, res) => {
-  const requestUrl = new URL(req.url, `https://${req.headers.host}`);
+  const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   const path = requestUrl.pathname;
   const method = req.method;
 
