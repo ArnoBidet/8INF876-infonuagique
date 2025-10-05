@@ -10,14 +10,10 @@ public class Server implements AgentInterface {
         System.setSecurityManager(new SecurityManager());
 
         try {
-            AdderRemote ai = new Adder();
-            SubstractorRemote si = new Substractor();
-            MultiplierRemote mi = new Multiplier();
-            DividerRemote di = new Divider();
-            Naming.rebind("adder", ai);
-            Naming.rebind("substractor", si);
-            Naming.rebind("multiplier", mi);
-            Naming.rebind("divider", di);
+            Naming.rebind("adder", new Adder());
+            Naming.rebind("substractor", new Substractor());
+            Naming.rebind("multiplier", new Multiplier());
+            Naming.rebind("divider", new Divider());
         }catch(Exception e){
             System.out.println(e.getMessage());
         }

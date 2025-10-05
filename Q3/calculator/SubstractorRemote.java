@@ -9,5 +9,5 @@ public interface SubstractorRemote extends Remote {
      * @param b The substractor
      * @return The substraction of a - b
      */
-    int substract(int a, int b) throws RemoteException ;
+    int substract(int a, int b) throws RemoteException;
 }

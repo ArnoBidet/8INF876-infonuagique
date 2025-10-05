@@ -1,12 +1,14 @@
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-
-import calculator.AdderRemote;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.util.Scanner;
+
+import calculator.AdderRemote;
+import calculator.SubstractorRemote;
+import calculator.ZeroDivisionException;
+import calculator.MultiplierRemote;
+import calculator.DividerRemote;
 
 public class Client implements AgentInterface {
     static Scanner scanner = new Scanner(System.in);
@@ -33,16 +35,16 @@ public class Client implements AgentInterface {
             try {
                 int result = 0;
                 if (input.equals("1")) {
-                    AdderRemote adder = calculatorFunctionnalty("adder");
+                    AdderRemote adder = serviceGetter("adder");
                     result = adder.add(values[0], values[1]);
                 } else if (input.equals("2")) {
-                    SubstractorRemote substractor = calculatorFunctionnalty("substractor");
+                    SubstractorRemote substractor = serviceGetter("substractor");
                     result = substractor.substract(values[0], values[1]);
                 } else if (input.equals("3")) {
-                    MultiplierRemote multiplier = calculatorFunctionnalty("multiplier");
+                    MultiplierRemote multiplier = serviceGetter("multiplier");
                     result = multiplier.multiply(values[0], values[1]);
                 } else if (input.equals("4")) {
-                    DividerRemote divider = calculatorFunctionnalty("divider");
+                    DividerRemote divider = serviceGetter("divider");
                     result = (int) divider.divide(values[0], values[1]);
                 } else if (!input.matches("1|2|3|4|q")) {
                     System.out.println("Please, type a valid number or 'q' to quit.");
@@ -58,8 +60,7 @@ public class Client implements AgentInterface {
         scanner.close();
     }
 
-    private <T> T calculatorFunctionnalty(String serviceName) {
-        System.out.println("Calculator selected.");
+    private <T> T serviceGetter(String serviceName) {
         System.setSecurityManager(new SecurityManager());
         T result = null;
         try {
