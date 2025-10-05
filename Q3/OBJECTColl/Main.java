@@ -20,7 +20,7 @@ public class Main {
     }
 
     public static void printQuestion() {
-        System.out.println("Select what you want to launch :        ");
+        System.out.println("Select what you want to launch :");
         System.out.println("1. Server");
         System.out.println("2. Client");
     }

@@ -19,13 +19,13 @@ public class Client implements AgentInterface {
         do {
             System.setProperty("java.security.policy", "./security.policy");
             System.out.println("=========================");
-            System.out.println("Choose a functionnality :");
+            System.out.println("Choose a functionality:");
             System.out.println("1 - Adder");
             System.out.println("2 - Substractor");
             System.out.println("3 - Multiplier");
             System.out.println("4 - Divider");
             System.out.println("q - Quit");
-            System.out.print("Your choice : ");
+            System.out.print("Your choice: ");
             if (scanner.hasNextLine())
                 input = scanner.nextLine();
             input = input.trim();
@@ -49,7 +49,7 @@ public class Client implements AgentInterface {
                 } else if (!input.matches("1|2|3|4|q")) {
                     System.out.println("Please, type a valid number or 'q' to quit.");
                 }
-                System.out.println("Result : " + result);
+                System.out.println("Result: " + result);
             } catch (RemoteException e) {
                 System.err.println("RemoteException occurred: " + e.getMessage());
                 e.printStackTrace();
@@ -58,7 +58,7 @@ public class Client implements AgentInterface {
                 e.printStackTrace();
             }
         } while (!input.equals("q"));
-        System.out.println("goodbye !");
+        System.out.println("Goodbye!");
         scanner.close();
     }
 
@@ -70,7 +70,7 @@ public class Client implements AgentInterface {
             result = (T) Naming.lookup(url);
             System.out.println(result.toString());
         } catch (MalformedURLException | NotBoundException | RemoteException e) {
-            System.out.println("Erreur a l'accès du gest. banc." + e);
+            System.out.println("Error accessing the registry: " + e);
         }
         return result;
     }
@@ -84,9 +84,9 @@ public class Client implements AgentInterface {
     }
 
     private int askValue(String valueName) {
-        System.out.print("Enter value for " + valueName + " : ");
+        System.out.print("Enter value for " + valueName + ": ");
         while (!scanner.hasNextInt()) {
-            System.out.print("Please enter a valid integer for b: ");
+            System.out.print("Please enter a valid integer for " + valueName + ": ");
             scanner.next();
         }
         return scanner.nextInt();
