@@ -52,7 +52,7 @@ document.getElementById("imcForm").addEventListener("submit", function(e) {
 
 // Fonction pour charger l'historique
 function loadHistory() {
-  fetch("http://localhost:3000/imc")
+  fetch("__API_URL__/imc")
     .then(response => response.json())
     .then(data => {
       const historyBody = document.getElementById("historyBody");
