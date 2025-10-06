@@ -18,6 +18,21 @@
         <button type="submit">Calculer</button>
     </form>
     <div id="result"></div>
+
+  <h2>Historique des calculs</h2>
+    <table id="historyTable" border="1" style="margin-top: 10px; display:none;">
+        <thead>
+        <tr>
+            <th>Utilisateur</th>
+            <th>Poids (kg)</th>
+            <th>Taille (m)</th>
+            <th>IMC</th>
+        </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+    </table>
+    <button id="loadHistory">Afficher l'historique</button>
+
     <script src="script.js"></script>
 </body>
 </html>

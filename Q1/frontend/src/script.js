@@ -34,6 +34,7 @@ document.getElementById("imcForm").addEventListener("submit", function(e) {
                 }
                 
             }
+            loadHistory();
             document.getElementById("result").style.display = "block";
         })
         .catch(err => {
@@ -47,3 +48,37 @@ document.getElementById("imcForm").addEventListener("submit", function(e) {
         document.getElementById("result").style.display = "block";
     }
 });
+
+
+// Fonction pour charger l'historique
+function loadHistory() {
+  fetch("http://localhost:3000/imc")
+    .then(response => response.json())
+    .then(data => {
+      const historyBody = document.getElementById("historyBody");
+      historyBody.innerHTML = ""; // reset tableau
+
+      if (data.length === 0) {
+        historyBody.innerHTML = "<tr><td colspan='4'>Aucun calcul enregistré</td></tr>";
+      } else {
+        data.forEach(entry => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${entry.username}</td>
+            <td>${entry.weight}</td>
+            <td>${(entry.height / 100).toFixed(2)}</td>
+            <td>${entry.imc}</td>
+          `;
+          historyBody.appendChild(row);
+        });
+      }
+
+      document.getElementById("historyTable").style.display = "table";
+    })
+    .catch(err => {
+      console.error("Erreur lors du chargement de l'historique :", err);
+    });
+}
+
+// Bouton pour charger l'historique
+document.getElementById("loadHistory").addEventListener("click", loadHistory);
