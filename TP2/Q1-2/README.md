@@ -29,6 +29,21 @@ sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
 Pour vérifier l'installation 
 
+```sh 
+kubectl version
+# Client Version: v1.34.1
+# Kustomize Version: v5.7.1
+# The connection to the server localhost:8080 was refused - did you specify the right host or port?
+```
+---
+
+Pour installer MiniKube via la [documentation](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download)
+
+```sh
+curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+```
+
 ```sh
 minikube start
 # 😄  minikube v1.37.0 sur Ubuntu 24.04
@@ -46,14 +61,6 @@ minikube start
 #     ▪ Utilisation de l'image gcr.io/k8s-minikube/storage-provisioner:v5
 # 🌟  Modules activés: storage-provisioner, default-storageclass
 # 🏄  Terminé ! kubectl est maintenant configuré pour utiliser "minikube" cluster et espace de noms "default" par défaut.
-```
----
-
-Pour installer MiniKube via la [documentation](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download)
-
-```sh
-curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
-sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
 ```
 
 Pour rappel de ce que sont ces trois utiilitaires que nous avons installés :
