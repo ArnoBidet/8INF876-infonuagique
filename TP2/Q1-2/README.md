@@ -5,6 +5,18 @@
 
 ## Question 1
 
+### TL;DR lancer le tout
+
+- Créer le fichier `secrets.yaml` à partir de `secrets.example.yaml`. Compléter les champs en y mettant des valeurs en base 64 `echo -n "[TRUC A CHIFFRER]" | base64`.
+- Lancer Minikube `minikube start`
+- Tout lancer `make all`
+- Obtenir l'ip du serveur `minikube ip`
+- Accéder au serveur WEB à `[minikube ip]:30080`
+- Regarder les différentes ressources générées `make lookup`
+- Tout arrêter `make clean-all`
+- Vider la BDD `make clean very-all`
+- Arrêter minikube `make stop`
+
 ### Étape 1 - Installation
 
 Docker est déjà installé sur nos machines :

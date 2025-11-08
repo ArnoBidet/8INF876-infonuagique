@@ -14,6 +14,20 @@ deploy-front:
 	kubectl apply -f $(FRONTEND_FOLDER)/frontend-deployment.yaml
 	kubectl apply -f $(FRONTEND_FOLDER)/frontend-service.yaml
 
+lookup:
+	echo "Deployments:"
+	kubectl get deployment -n default
+	echo "Services:"
+	kubectl get services -n default
+	echo "Pods:"
+	kubectl get pods -n default
+	echo "Persistent Volume Claims:"
+	kubectl get pvc -n default
+	echo "Config Maps:"
+	kubectl get configmap -n default
+	echo "Secrets:"
+	kubectl get secrets -n default
+
 clean-front:
 	kubectl delete -f $(FRONTEND_FOLDER)/frontend-deployment.yaml
 	kubectl delete -f $(FRONTEND_FOLDER)/frontend-service.yaml
