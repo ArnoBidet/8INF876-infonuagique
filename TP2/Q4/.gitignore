@@ -1,0 +1,18 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Docker
+*.tar
+*.log
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.DS_Store
+
+# Kubernetes YAML temporaires ou secrets locaux
+*.yaml.local
+.env
