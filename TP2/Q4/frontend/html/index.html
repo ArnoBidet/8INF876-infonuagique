@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Demo Kubernetes App</title>
+</head>
+<body>
+  <h1>Frontend Kubernetes Demo</h1>
+  <button id="helloBtn">Appeler le backend</button>
+  <pre id="result"></pre>
+
+ <script>
+    document.getElementById("helloBtn").addEventListener("click", async () => {
+    try {
+        const res = await fetch("http://localhost:30002/");
+        const text = await res.text();
+        document.getElementById("result").textContent = text;
+    } catch (err) {
+        document.getElementById("result").textContent = "Erreur : " + err;
+    }
+    });
+</script>
+
+</body>
+</html>
