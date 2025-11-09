@@ -1,5 +1,9 @@
 # Kubernetes Demo Application
 
+## Etude de l’architecture de Kubernetes
+
+Vous trouverez un document TP2_infonuagique.pdf présent dans ce dossier, présentant l'étude de l'architecture de kubernetes, des composantes et de la virtualisation ainsi que les avantages et les inconvénients de Kubernetes et enfin une comparaison entrre Kubernetes, les conteneurs Docker et les machines virtuelles. 
+
 ## Description
 
 Cette application est une démonstration complète d’un **déploiement Kubernetes multi-conteneurs**.  
@@ -131,41 +135,11 @@ kubectl get pods
 - Backend (Node.js) : [http://localhost:30002](http://localhost:30002)  
 - PostgreSQL : accessible via le service `postgres-service` à l’intérieur du cluster.
 
-Cliquez sur **“Appeler le backend”** dans la page frontend pour voir la réponse du backend.
-
+Cliquez sur **Check backend”** dans la page frontend pour voir la réponse du backend.
+Cliquez sur **Check DB connection** dans la page frontend pour voir la réponse du backend.
 ---
 
-### 6 Commandes utiles
-
-- Vérifier l’état des pods :
-```bash
-kubectl get pods
-```
-
-- Vérifier les services :
-```bash
-kubectl get svc
-```
-
-- Voir les logs d’un pod :
-```bash
-kubectl logs <nom_du_pod>
-```
-
-- Mettre à l’échelle le backend (exemple : 4 réplicas) :
-```bash
-kubectl scale deployment backend --replicas=4
-kubectl get pods
-```
-
-- Supprimer un déploiement :
-```bash
-kubectl delete deployment backend
-```
-
----
-
-### 7 Notes importantes
+### 6 Notes importantes
 
 - L’image backend utilise **CORS activé** pour permettre au frontend sur un autre port (`30003`) de communiquer avec le backend (`30002`).  
 - PostgreSQL est **persistant** grâce au volume PVC : les données survivent au redémarrage des pods.  

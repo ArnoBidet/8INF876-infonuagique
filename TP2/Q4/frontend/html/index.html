@@ -5,8 +5,26 @@
 </head>
 <body>
   <h1>Frontend Kubernetes Demo</h1>
-  <button id="helloBtn">Appeler le backend</button>
+  
+  <button id="helloBtn">Check backend</button>
   <pre id="result"></pre>
+
+  <button id="check-db">Check DB Connection</button>
+  <pre id="result2"></pre>
+
+
+
+<script>
+  document.getElementById("check-db").onclick = async () => {
+    try {
+      const res = await fetch("http://localhost:30002/db");
+      const data = await res.json();
+      document.getElementById("result2").textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+      document.getElementById("result2").textContent = "Database connection failed.";
+    }
+  };
+</script>
 
  <script>
     document.getElementById("helloBtn").addEventListener("click", async () => {
