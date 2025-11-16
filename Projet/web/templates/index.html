@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surveillance de Drones</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="/static/style.css"/>
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1>Surveillance de Drones</h1>
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span>En ligne</span>
+        </div>
+      </header>
+      
+      <main class="main-grid">
+        <section class="map-section">
+          <div class="section-header">
+            <h2>Carte de surveillance</h2>
+          </div>
+          <div id="map" class="map-container"></div>
+        </section>
+        
+        <section class="charts-section">
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3>Entités dans la zone</h3>
+              <span class="chart-subtitle">Évolution temporelle</span>
+            </div>
+            <canvas id="chartIn"></canvas>
+          </div>
+          
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3>Entités hors zone</h3>
+              <span class="chart-subtitle">Évolution temporelle</span>
+            </div>
+            <canvas id="chartOut"></canvas>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/script.js"></script>
+  </body>
+</html>
