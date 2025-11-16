@@ -46,12 +46,12 @@ function fetchState() {
       } else {
         droneMarkers[d.id].setLatLng([d.lat, d.lng]);
       }
-      if (!droneCircles[d.id]) {
-        droneCircles[d.id] = L.circle([d.lat, d.lng], {radius: d.radius, color: 'blue', opacity:0.3}).addTo(map);
-      } else {
-        droneCircles[d.id].setLatLng([d.lat, d.lng]);
-        droneCircles[d.id].setRadius(d.radius);
-      }
+    //   if (!droneCircles[d.id]) {
+    //     droneCircles[d.id] = L.circle([d.lat, d.lng], {radius: d.radius, color: 'blue', opacity:0.3}).addTo(map);
+    //   } else {
+    //     droneCircles[d.id].setLatLng([d.lat, d.lng]);
+    //     droneCircles[d.id].setRadius(d.radius);
+    //   }
     });
 
     // remove stale markers
