@@ -1,0 +1,131 @@
+classDiagram
+    %% Classes de données de base
+    class Position {
+        +float lat
+        +float lng
+        +float altitude
+        +datetime timestamp
+        +distance_to(Position) float
+    }
+    
+    class DroneInfo {
+        +string drone_id
+        +Position position
+        +datetime last_seen
+        +float signal_strength
+        +is_active(int) bool
+    }
+    
+    %% Énumérations et structures
+    class AlertType {
+        <<enumeration>>
+        DRONE_EXIT
+        ZONE_FRAGMENTATION
+        LOW_DENSITY
+        COMMUNICATION_LOSS
+    }
+    
+    class Alert {
+        +string alert_id
+        +AlertType alert_type
+        +string source_drone_id
+        +Position position
+        +Dict data
+        +datetime timestamp
+        +int ttl
+    }
+    
+    %% Interface de communication
+    class CommunicationProtocol {
+        <<interface>>
+        +start_discovery() void
+        +broadcast_position(Position) void
+        +send_alert(Alert, string) void
+        +listen_for_messages() Queue
+    }
+    
+    %% Implémentations des protocoles
+    class BLEProtocol {
+        +start_discovery() void
+        +broadcast_position(Position) void
+        +send_alert(Alert, string) void
+        +listen_for_messages() Queue
+    }
+    
+    class WiFiDirectProtocol {
+        +start_discovery() void
+        +broadcast_position(Position) void
+        +send_alert(Alert, string) void
+        +listen_for_messages() Queue
+    }
+    
+    class LoRaProtocol {
+        +start_discovery() void
+        +broadcast_position(Position) void
+        +send_alert(Alert, string) void
+        +listen_for_messages() Queue
+    }
+    
+    %% Estimation de zone locale
+    class LocalZoneEstimator {
+        -Dict~string,DroneInfo~ neighbors
+        +update_neighbor(DroneInfo) void
+        +cleanup_inactive_neighbors(int) void
+        +compute_convex_hull() List~Position~
+        +compute_local_centroid() Position
+        +estimate_zone_boundary() List~Position~
+    }
+    
+    %% Logique de géofencing
+    class GeofencingLogic {
+        -string drone_id
+        -LocalZoneEstimator zone_estimator
+        -Dict~string,Alert~ alert_history
+        +is_at_border(Position) bool
+        +is_outside_zone(Position) bool
+        +detect_neighbor_exit() List~Alert~
+        +should_relay_alert(Alert) bool
+        +generate_correction_vector(Position) Tuple~float,float~
+    }
+    
+    %% Contrôleur principal
+    class DroneController {
+        -string drone_id
+        -Position current_position
+        -CommunicationProtocol protocol
+        -LocalZoneEstimator zone_estimator
+        -GeofencingLogic geofencing
+        -Queue message_queue
+        -bool running
+        +start() void
+        +stop() void
+        +update_position(Position) void
+        -_position_broadcast_loop() void
+        -_message_processing_loop() void
+        -_geofencing_loop() void
+        -_neighbor_cleanup_loop() void
+        -_process_message(Dict) void
+        -_apply_correction(Tuple) void
+    }
+    
+    %% Relations
+    DroneInfo --> Position : contains
+    Alert --> Position : contains
+    Alert --> AlertType : uses
+    
+    CommunicationProtocol <|-- BLEProtocol : implements
+    CommunicationProtocol <|-- WiFiDirectProtocol : implements
+    CommunicationProtocol <|-- LoRaProtocol : implements
+    
+    LocalZoneEstimator --> DroneInfo : manages
+    LocalZoneEstimator --> Position : processes
+    
+    GeofencingLogic --> LocalZoneEstimator : uses
+    GeofencingLogic --> Alert : generates
+    GeofencingLogic --> Position : analyzes
+    
+    DroneController --> Position : tracks
+    DroneController --> CommunicationProtocol : uses
+    DroneController --> LocalZoneEstimator : contains
+    DroneController --> GeofencingLogic : contains
+    DroneController --> Alert : processes
