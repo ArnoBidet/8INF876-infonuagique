@@ -16,3 +16,63 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+  
+  #Le Broker MQTT (Mosquitto)
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto-broker
+    restart: always # Redémarre automatiquement si le conteneur tombe
+    ports:
+      - "1883:1883" # Port standard pour la communication MQTT
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      #- ./mosquitto/data:/mosquitto/data
+      #- ./mosquitto/log:/mosquitto/log
+
+  drone1:
+    build:
+      context: ./drone
+    depends_on:
+      - mqtt-broker
+    environment:
+      - DRONE_ID=1
+      - MQTT_BROKER=mqtt-broker 
+    
+    command: ["python", "-u", "drone_subscriber.py"] 
+    restart: unless-stopped
+
+  drone2:
+    build:
+      context: ./drone
+    depends_on:
+      - mqtt-broker
+    environment:
+      - DRONE_ID=2
+      - MQTT_BROKER=mqtt-broker 
+    
+    command: ["python", "-u", "drone_subscriber.py"] 
+    restart: unless-stopped
+
+  drone3:
+    build:
+      context: ./drone
+    depends_on:
+      - mqtt-broker
+    environment:
+      - DRONE_ID=3
+      - MQTT_BROKER=mqtt-broker 
+    
+    command: ["python", "-u", "drone_subscriber.py"] 
+    restart: unless-stopped
+
+
+  vache:
+    build:
+      context: ./vache
+    depends_on:
+      - mqtt-broker
+    environment:
+      - MQTT_BROKER=mqtt-broker
+      - VACHE_ID_PREFIX=vache
+    command: ["python", "-u", "vache_publisher.py"] 
+    restart: unless-stopped
