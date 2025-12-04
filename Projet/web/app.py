@@ -3,10 +3,12 @@ import time
 import threading
 import math
 import random
+import json
 from collections import deque
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 import requests
+import paho.mqtt.client as mqtt
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app)
@@ -22,22 +24,72 @@ HISTORY_MAX = int(os.getenv('HISTORY_MAX', '300'))
 # In-memory time series of counts (timestamp, in_count, out_count)
 history = deque(maxlen=HISTORY_MAX)
 
-# Simulated entities (if no external source). Each entity: {'id', 'lat', 'lng'}
-entities = []
+# Real-time data from MQTT
+current_cows = []
+current_drones = []
+current_zone = []
 
-# Center for simulation / map (default around Quebec City)
-MAP_CENTER = (46.8139, -71.2080)
+# Center for simulation / map (10km north of Quebec City)
+MAP_CENTER = (46.9131, -71.2085)
+
+# MQTT Configuration
+MQTT_BROKER = os.getenv('MQTT_BROKER', 'mqtt-broker')
+MQTT_PORT = 1883
 
 
-def init_entities():
-    global entities
-    entities = []
-    base_lat, base_lng = MAP_CENTER
-    for i in range(ENTITIES_COUNT):
-        # scatter within ~0.05 degrees
-        lat = base_lat + random.uniform(-0.05, 0.05)
-        lng = base_lng + random.uniform(-0.05, 0.05)
-        entities.append({'id': i, 'lat': lat, 'lng': lng})
+# MQTT callback functions
+def on_mqtt_connect(client, userdata, flags, rc, properties):
+    """Called when MQTT client connects"""
+    if rc == 0:
+        print("Web app connected to MQTT broker")
+        client.subscribe("vaches/positions")
+        client.subscribe("drones/zone")
+    else:
+        print(f"Failed to connect to MQTT broker: {rc}")
+
+def on_mqtt_message(client, userdata, msg):
+    """Called when MQTT message is received"""
+    global current_cows, current_drones, current_zone, history
+    
+    try:
+        payload = json.loads(msg.payload.decode())
+        print(f"[WEB] MQTT message received on {msg.topic}: {len(str(payload))} chars")
+        
+        if msg.topic == "vaches/positions":
+            current_cows = payload.get('cows', [])
+            print(f"[WEB] Updated {len(current_cows)} cows")
+            
+        elif msg.topic == "drones/zone":
+            current_drones = payload.get('drones', [])
+            current_zone = payload.get('polygon', [])
+            print(f"[WEB] Updated {len(current_drones)} drones, zone with {len(current_zone)} points")
+            
+            # Update history with in/out counts
+            if current_cows:
+                in_count = len([cow for cow in current_cows if not cow.get('outside_zone', False)])
+                out_count = len([cow for cow in current_cows if cow.get('outside_zone', False)])
+                
+                now = int(time.time())
+                history.append({'ts': now, 'in': in_count, 'out': out_count})
+                
+    except Exception as e:
+        print(f"Error processing MQTT message: {e}")
+
+# Initialize MQTT client
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+mqtt_client.on_connect = on_mqtt_connect  
+mqtt_client.on_message = on_mqtt_message
+
+def init_mqtt():
+    """Initialize MQTT connection"""
+    try:
+        print(f"[WEB] Attempting to connect to MQTT broker at {MQTT_BROKER}:{MQTT_PORT}")
+        mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+        mqtt_client.loop_start()
+        print(f"[WEB] MQTT client started")
+    except Exception as e:
+        print(f"[WEB] Failed to connect to MQTT: {e}")
+        print(f"[WEB] Will continue without MQTT - using fallback data")
 
 
 def move_entities():
@@ -124,8 +176,8 @@ def point_in_polygon(x, y, poly):
     return inside
 
 
-# Initialize entities at import time (works with gunicorn workers)
-init_entities()
+# Initialize MQTT connection at import time
+init_mqtt()
 
 
 @app.route('/')
@@ -135,41 +187,34 @@ def index():
 
 @app.route('/api/state')
 def api_state():
-    # Move simulated entities a bit
-    move_entities()
-
-    # Get drones from URLs or simulate
-    drones = fetch_drones_from_urls()
-    if not drones:
-        drones = simulated_drones()
-
-    # compute convex hull of drone lat/lng as polygon
-    pts = [(d['lat'], d['lng']) for d in drones]
-    hull = monotonic_chain_convex_hull(pts)
-
-    # count entities inside hull
-    in_count = 0
-    out_count = 0
-    for e in entities:
-        if point_in_polygon(e['lat'], e['lng'], hull):
-            in_count += 1
-        else:
-            out_count += 1
-
-    # append to history
+    global current_cows, current_drones, current_zone
+    
     now = int(time.time())
-    history.append({'ts': now, 'in': in_count, 'out': out_count})
-
-    # prepare time series arrays (last N)
+    
+    # Count cows in/out of zone
+    if current_cows:
+        in_count = len([cow for cow in current_cows if not cow.get('outside_zone', False)])
+        out_count = len([cow for cow in current_cows if cow.get('outside_zone', False)])
+    else:
+        in_count, out_count = 0, 0
+    
+    # Prepare time series arrays (last N)
     times = [h['ts'] for h in history]
     ins = [h['in'] for h in history]
     outs = [h['out'] for h in history]
+    
+    # Add current data to history if not recent
+    if not history or (now - history[-1]['ts']) > 5:
+        history.append({'ts': now, 'in': in_count, 'out': out_count})
+
+    print(f"[API] Returning: {len(current_drones)} drones, {len(current_cows)} cows, {len(current_zone)} zone points")
 
     return jsonify({
         'timestamp': now,
-        'drones': drones,
-        'hull': [{'lat': p[0], 'lng': p[1]} for p in hull],
-        'entities_count': len(entities),
+        'drones': current_drones,
+        'cows': current_cows,
+        'hull': current_zone,
+        'entities_count': len(current_cows),
         'counts': {'in': in_count, 'out': out_count},
         'timeseries': {'t': times, 'in': ins, 'out': outs},
         'center': {'lat': MAP_CENTER[0], 'lng': MAP_CENTER[1]}

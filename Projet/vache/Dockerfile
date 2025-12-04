@@ -8,8 +8,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copie du script d'exécution de la vache
-COPY vache_publisher.py .
+# Copie des scripts d'exécution
+COPY *.py .
 
 # Commande de lancement de l'application
 # Elle exécute le script Python simple

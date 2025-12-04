@@ -8,8 +8,9 @@ services:
       - "5000:5000"
     environment:
       - ENTITIES_COUNT=100
-      # Optionally set DRONE_URLS as a comma-separated list of drone endpoints
-      # - DRONE_URLS=http://drone1.example/api/state,http://drone2.example/api/state
+      - MQTT_BROKER=mqtt-broker
+    depends_on:
+      - mqtt-broker
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/state"]
