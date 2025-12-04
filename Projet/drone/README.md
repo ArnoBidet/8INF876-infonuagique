@@ -1,0 +1,174 @@
+# Module Drone - Surveillance de Vaches par Drones
+
+Ce module fournit un système de surveillance de vaches utilisant des calculs d'enveloppe convexe pour détecter si des vaches se trouvent à l'intérieur du périmètre formé par des drones.
+
+## 🏗️ Architecture
+
+Le module a été refactorisé en plusieurs composants spécialisés pour une meilleure organisation et maintenabilité :
+
+```
+drone/
+├── __init__.py          # Interface publique du package
+├── drone.py             # Module principal (rétrocompatibilité)
+├── geometry.py          # Calculs géométriques
+├── cow_detection.py     # Détection et alertes
+└── drone_service.py     # Service principal orchestrateur
+```
+
+### 📁 Description des modules
+
+#### `geometry.py` - Calculs géométriques
+- **`cross_product(o, a, b)`** : Calcule le produit vectoriel pour déterminer l'orientation
+- **`convex_hull(entities)`** : Calcule l'enveloppe convexe d'un ensemble de points
+
+#### `cow_detection.py` - Détection et alertes  
+- **`detect_cow_in_hull(hull)`** : Détecte la présence de vaches dans l'enveloppe
+- **`print_alert(cows)`** : Affiche les informations d'alerte
+- **`alert(hull)`** : Orchestrateur principal pour la détection et l'alerte
+
+#### `drone_service.py` - Service principal
+- **`DroneService`** : Classe principale avec méthodes statiques
+  - `analyze_perimeter(entities)` : Analyse complète du périmètre
+  - `monitor_and_alert(entities)` : Surveillance et alerte automatique
+
+#### `drone.py` - Rétrocompatibilité
+- Module maintenu pour la compatibilité avec l'ancien code
+- **DEPRECATED** : Utilisez les modules spécialisés pour les nouveaux développements
+
+## 🚀 Utilisation
+
+### Utilisation moderne (recommandée)
+
+```python
+from drone import DroneService, convex_hull, detect_cow_in_hull
+
+# Données d'exemple
+entities = [
+    ("drone_1", 0, 0),
+    ("drone_2", 10, 0), 
+    ("drone_3", 5, 10),
+    ("cows_1", 3, 3)
+]
+
+# Analyse complète avec le service
+hull, has_cows, detected_cows = DroneService.analyze_perimeter(entities)
+
+# Surveillance avec alerte automatique
+DroneService.monitor_and_alert(entities)
+
+# Utilisation des modules individuels
+hull = convex_hull(entities)
+has_cows, cows = detect_cow_in_hull(hull)
+```
+
+### Utilisation avec rétrocompatibilité
+
+```python
+# L'ancien code continue de fonctionner
+from drone import convex_hull, detect_cow_in_hull, alert
+
+entities = [("drone_1", 0, 0), ("drone_2", 10, 0), ("cows_1", 3, 3)]
+
+hull = convex_hull(entities)
+alert(hull)
+```
+
+## 📊 Format des données
+
+Les entités sont représentées par des tuples `(entity_id, x, y)` :
+- **entity_id** : Identifiant de l'entité (ex: "drone_1", "cows_2")
+- **x, y** : Coordonnées dans le plan 2D
+
+### Conventions de nommage
+- **Drones** : ID contenant "drone" (ex: "drone_1", "drone_alpha")
+- **Vaches** : ID contenant "cows" (ex: "cows_1", "cows_beta")
+
+## 🔧 Exemples d'utilisation
+
+### Exemple 1 : Surveillance basique
+```python
+from drone import DroneService
+
+# Définir les positions
+positions = [
+    ("drone_1", 0, 0),
+    ("drone_2", 10, 0),
+    ("drone_3", 5, 10),
+    ("cows_1", 3, 3),
+    ("cows_2", 15, 5)  # Vache à l'extérieur
+]
+
+# Surveillance automatique
+DroneService.monitor_and_alert(positions)
+# Sortie: "ALERTE: Vache(s) détectée(s) dans l'enveloppe convexe"
+#         " - Vache ID: cows_1, Position: (3, 3)"
+```
+
+### Exemple 2 : Analyse détaillée
+```python
+from drone import convex_hull, detect_cow_in_hull
+
+# Calculer l'enveloppe convexe
+hull = convex_hull(positions)
+print(f"Enveloppe formée par: {hull}")
+
+# Analyser la présence de vaches
+has_cows, detected_cows = detect_cow_in_hull(hull)
+if has_cows:
+    print(f"Vaches détectées: {len(detected_cows)}")
+    for cow in detected_cows:
+        print(f"  - {cow[0]} à la position ({cow[1]}, {cow[2]})")
+```
+
+## 🧪 Tests et validation
+
+Pour tester le module :
+```python
+# Test avec différentes configurations
+test_cases = [
+    # Cas 1: Pas de vaches
+    [("drone_1", 0, 0), ("drone_2", 10, 0), ("drone_3", 5, 10)],
+    
+    # Cas 2: Vache à l'intérieur
+    [("drone_1", 0, 0), ("drone_2", 10, 0), ("drone_3", 5, 10), ("cows_1", 3, 3)],
+    
+    # Cas 3: Vache à l'extérieur
+    [("drone_1", 0, 0), ("drone_2", 10, 0), ("drone_3", 5, 10), ("cows_1", 15, 15)]
+]
+
+for i, entities in enumerate(test_cases, 1):
+    print(f"\n--- Test {i} ---")
+    DroneService.monitor_and_alert(entities)
+```
+
+## 📈 Algorithme
+
+Le module utilise l'**algorithme d'Andrew** pour calculer l'enveloppe convexe :
+1. Tri des points par coordonnées (x, y)
+2. Construction de la partie basse de l'enveloppe
+3. Construction de la partie haute de l'enveloppe
+4. Fusion des deux parties
+
+**Complexité** : O(n log n) où n est le nombre d'entités.
+
+## 🔄 Migration depuis l'ancien code
+
+Si vous utilisez l'ancien module `drone.py` :
+
+```python
+# Ancien code (continue de fonctionner)
+from drone import convex_hull, alert
+hull = convex_hull(entities)
+alert(hull)
+
+# Nouveau code (recommandé)
+from drone import DroneService
+DroneService.monitor_and_alert(entities)
+```
+
+## 🚨 Notes importantes
+
+- Les ID des vaches doivent contenir le mot "cows" pour être détectées
+- Les coordonnées sont en nombres flottants ou entiers
+- Le module gère automatiquement les cas avec moins de 3 points
+- La détection se base sur l'appartenance à l'enveloppe convexe, pas sur l'intérieur géométrique strict
