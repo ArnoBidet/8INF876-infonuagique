@@ -1,0 +1,17 @@
+graph TD
+    subgraph Drone["Drone (Entité Autonome)"]
+        A[GPS / IMU<br/>Position]
+        B[P2P Communication<br/>BLE / WiFi-Direct / LoRa]
+        C[Neighbor Discovery]
+        D[Local Zone Estimation<br/>Convex Hull / Barycentre]
+        E[Distributed Geofencing Logic]
+        F[Local Alerts / Corrections]
+    end
+
+    A --> C
+    C --> D
+    D --> E
+    E --> F
+    B <---> C
+    B <---> D
+    B <---> E

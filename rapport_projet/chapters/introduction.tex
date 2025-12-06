@@ -1,0 +1,31 @@
+\section{Introduction}
+
+\subsection{Introduction}
+L'essor des objets connectés et des systèmes autonomes a transformé la manière dont nous interagissons avec l'espace physique. Les \textit{Location Based Services} (LBS) fournissent aujourd'hui des fonctionnalités critiques basées sur la géolocalisation des utilisateurs ou des appareils \cite{ieee2015}.
+
+Cependant, la majorité des systèmes actuels (comme le suivi de flotte ou les applications grand public type Google Maps) reposent sur une architecture centralisée client-serveur. Dans le contexte d'une flotte de drones opérant dans des zones potentiellement déconnectées ou hostiles, cette dépendance à un serveur central pose des problèmes de latence, de résilience et de couverture réseau.
+
+Ce projet, nommé \textbf{DroneGeoTracking}, propose une approche distribuée pour coordonner un essaim de drones, en mettant l'accent sur le maintien d'une cohésion de groupe via un géofencing dynamique et émergent.
+
+\subsection{Description de la problématique}
+La problématique principale que nous adressons est la suivante : \textit{Comment réaliser du géofencing dynamique dans un environnement entièrement décentralisé ?}
+
+Les défis techniques identifiés sont multiples :
+\begin{itemize}
+    \item \textbf{Absence de leader :} Aucun drone ne possède la "vérité" absolue sur la zone.
+    \item \textbf{Zone mouvante :} La zone à protéger (ex: un cortège, un bateau) se déplace, rendant les géofences statiques obsolètes.
+    \item \textbf{Communication opportuniste :} Les drones communiquent via des protocoles locaux (BLE, WiFi-Direct, LoRa) avec une portée limitée.
+\end{itemize}
+
+Notre objectif est de permettre aux drones de détecter s'ils s'éloignent trop du groupe (sortie de zone) ou si un voisin quitte la formation, et ce, sans aucune infrastructure au sol.
+
+\subsection{Description du développement}
+Le projet consiste en une implémentation d'un simulateur de drones autonomes. Chaque agent exécute une logique identique lui permettant de :
+\begin{enumerate}
+    \item Découvrir ses voisins via une simulation de réseau P2P.
+    \item Estimer la forme globale de l'essaim (Enveloppe Convexe).
+    \item Déterminer s'il se trouve à l'intérieur ou à l'extérieur de cette enveloppe.
+    \item Générer des alertes locales.
+\end{enumerate}
+
+Le système a été développé en Python pour la logique backend et la simulation, avec une interface de visualisation Web (Flask + Leaflet) pour observer le comportement de l'essaim en temps réel.

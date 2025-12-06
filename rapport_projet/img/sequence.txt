@@ -1,0 +1,31 @@
+sequenceDiagram
+    participant D1 as Drone Controller 1
+    participant C1 as Comms Protocol 1
+    participant C2 as Comms Protocol 2
+    participant D2 as Drone Controller 2
+    participant ZE as Zone Estimator
+    participant GF as Geofencing Logic
+    
+    %% Initialisation
+    D1->>C1: start_discovery()
+    D2->>C2: start_discovery()
+    
+    %% Diffusion de position
+    loop Position Broadcast
+        D1->>C1: broadcast_position(pos1)
+        C1->>C2: [BLE/WiFi/LoRa] position_msg
+        C2->>D2: receive position
+        D2->>ZE: update_neighbor(drone1_info)
+    end
+    
+    %% Estimation de zone et Correction
+    D2->>ZE: compute_convex_hull()
+    ZE-->>D2: hull_positions
+    D2->>GF: is_outside_zone(current_pos)
+    
+    alt Drone outside zone
+        GF-->>D2: true (outside)
+        D2->>GF: generate_correction_vector()
+        GF-->>D2: correction_vector
+        D2->>D2: apply_correction()
+    end

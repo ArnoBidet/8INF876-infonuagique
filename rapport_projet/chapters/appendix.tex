@@ -1,0 +1,25 @@
+\appendix
+\section{Détails de l'implémentation}
+Le projet est structuré comme suit :
+\begin{itemize}
+    \item \texttt{app.py} : Serveur Flask, simulation des drones et calcul géométrique.
+    \item \texttt{templates/index.html} : Structure de la page de visualisation.
+    \item \texttt{static/script.js} : Logique client, affichage de la carte Leaflet et polling de l'API.
+\end{itemize}
+
+\section{Manuel d'utilisation}
+Pour lancer la démonstration via Docker :
+
+\begin{enumerate}
+    \item Assurez-vous d'avoir Docker installé.
+    \item Placez-vous dans le dossier \texttt{Projet/web}.
+    \item Construisez l'image :
+    \begin{verbatim}
+    docker build -t drone-map-demo .
+    \end{verbatim}
+    \item Lancez le conteneur :
+    \begin{verbatim}
+    docker run -p 5000:5000 drone-map-demo
+    \end{verbatim}
+    \item Ouvrez votre navigateur à l'adresse \texttt{http://localhost:5000}.
+\end{enumerate}

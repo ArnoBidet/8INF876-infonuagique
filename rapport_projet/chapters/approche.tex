@@ -1,0 +1,63 @@
+\section{Approche prise pour la conception}
+
+\subsection{Introduction}
+Ce chapitre détaille l'architecture logicielle retenue pour répondre aux contraintes de décentralisation, ainsi que les modèles comportementaux des agents (drones).
+
+\subsection{Architecture du système}
+L'architecture repose sur un modèle \textit{Edge Computing} pur, où chaque drone est un nœud de calcul indépendant. Il n'y a pas de base de données partagée ni de coordinateur central.
+
+La zone de vol n'est pas définie par des coordonnées GPS fixes, mais est \textbf{émergente} : elle est le résultat du calcul de l'enveloppe convexe (Convex Hull) des positions de tous les voisins perçus à un instant $t$.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/architecture.png}
+    \caption{Architecture logique d'un drone}
+    \label{fig:arch}
+\end{figure}
+
+Comme illustré dans la Figure \ref{fig:arch}, chaque drone possède ses propres modules de communication, d'estimation de zone et de logique de géofencing.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{img/class_diagram.png}
+    \caption{Diagramme de classes du système}
+    \label{fig:classes}
+\end{figure}
+
+Le diagramme de classes (Figure \ref{fig:classes}) met en évidence la séparation entre la gestion des données brutes (\texttt{DroneInfo}, \texttt{Position}) et la logique métier (\texttt{LocalZoneEstimator}, \texttt{GeofencingLogic}).
+
+\subsection{Diagrammes de cas d'utilisations}
+Les principaux cas d'utilisation pour un drone autonome sont :
+\begin{itemize}
+    \item \textbf{Diffuser sa position :} Envoyer périodiquement ses coordonnées aux voisins.
+    \item \textbf{Calculer la zone locale :} Agréger les positions reçues pour définir la frontière virtuelle.
+    \item \textbf{Détecter une sortie :} Vérifier si sa propre position est hors de l'enveloppe convexe.
+    \item \textbf{Lancer une alerte :} Prévenir les voisins en cas d'anomalie ou de perte de signal.
+\end{itemize}
+
+\subsection{Diagrammes de séquences}
+Le processus de maintien de la cohésion suit une boucle de rétroaction continue.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{img/sequence.png}
+    \caption{Séquence de diffusion et de correction de position}
+    \label{fig:seq}
+\end{figure}
+
+La Figure \ref{fig:seq} montre comment la réception d'une position déclenche la mise à jour de l'estimateur de zone (\texttt{Zone Estimator}), qui informe ensuite la logique de géofencing pour appliquer une éventuelle correction de trajectoire.
+
+\subsection{Diagrammes d'états}
+Chaque drone évolue selon un automate à états finis pour gérer son statut au sein de l'essaim.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{img/states.png}
+    \caption{Diagramme d'états du drone}
+    \label{fig:state}
+\end{figure}
+
+L'état critique est \texttt{Operating}, qui se subdivise en sous-états de surveillance (\texttt{InZone}, \texttt{AtBorder}, \texttt{OutOfZone}).
+
+\subsection{Conclusion}
+L'architecture décentralisée permet une grande résilience : la perte d'un drone ne compromet pas la mission des autres, la zone se "refermant" simplement autour des membres restants.

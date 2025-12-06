@@ -1,0 +1,56 @@
+classDiagram
+    %% Classes de données de base
+    class Position {
+        +float lat
+        +float lng
+        +float altitude
+        +datetime timestamp
+        +distance_to(Position) float
+    }
+    
+    class DroneInfo {
+        +string drone_id
+        +Position position
+        +datetime last_seen
+        +float signal_strength
+        +is_active(int) bool
+    }
+    
+    %% Estimation de zone locale
+    class LocalZoneEstimator {
+        -Dict~string,DroneInfo~ neighbors
+        +update_neighbor(DroneInfo) void
+        +cleanup_inactive_neighbors(int) void
+        +compute_convex_hull() List~Position~
+        +compute_local_centroid() Position
+        +estimate_zone_boundary() List~Position~
+    }
+    
+    %% Logique de géofencing
+    class GeofencingLogic {
+        -string drone_id
+        -LocalZoneEstimator zone_estimator
+        -Dict~string,Alert~ alert_history
+        +is_at_border(Position) bool
+        +is_outside_zone(Position) bool
+        +detect_neighbor_exit() List~Alert~
+        +should_relay_alert(Alert) bool
+        +generate_correction_vector(Position) Tuple~float,float~
+    }
+    
+    %% Contrôleur principal
+    class DroneController {
+        -string drone_id
+        -Position current_position
+        -LocalZoneEstimator zone_estimator
+        -GeofencingLogic geofencing
+        +start() void
+        +update_position(Position) void
+        -_geofencing_loop() void
+    }
+    
+    DroneInfo --> Position : contains
+    LocalZoneEstimator --> DroneInfo : manages
+    GeofencingLogic --> LocalZoneEstimator : uses
+    DroneController --> LocalZoneEstimator : contains
+    DroneController --> GeofencingLogic : contains

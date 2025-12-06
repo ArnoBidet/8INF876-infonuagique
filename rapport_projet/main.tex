@@ -1,0 +1,88 @@
+\documentclass[french,12pt]{article} %type de document et langue
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin= 2.54cm]{geometry}
+\usepackage{babel}
+\usepackage{amsmath}
+\usepackage{tikz} %Utile pour des figures "à la main"
+\usetikzlibrary{arrows}
+%\usepackage{fullpage}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{makecell}
+\usepackage{graphicx} %Pour les figur
+\usepackage{cite}
+\usepackage{tabularx}
+\usepackage{geometry}
+\usepackage{url}
+\usepackage{hyperref}   
+\usepackage{float}   
+\usepackage{listings}
+
+
+\setlength\parindent{0pt}
+\usepackage{caption}
+\usepackage{enumitem}
+\newlist{balditemize}{itemize}{1}
+\setlist[balditemize]{label={},leftmargin=*}
+
+
+\usepackage{subfiles} % Best loaded last in the preamble
+
+\begin{document}
+	
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Page titre
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{titlepage}
+	\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+	\center
+	\textsc{\LARGE Université du Québec à Chicoutimi}\\[1.5cm] 
+	\textsc{\Large Département d'informatique et de mathématique}\\[0.5cm]
+	\textsc{\large 8INF876 - Conception et architecture des systèmes d'infonuagique }\\[0.5cm]
+	\HRule\\[0.4cm]
+	{\huge\bfseries \textbf{DroneGeoTracking} \\ \large Geofencing distribué pour essaim de drones }\\[0.4cm]
+	\HRule\\[1.5cm]
+        \begin{center}
+            \large
+            \textit{Étudiants}\\
+            Arno BIDET \\
+            Antoine MAMOU
+        \end{center}
+	{\large\textit{Remis à}}\\
+	Hamid \textsc{MCHEICK}
+	\vfill\vfill\vfill
+	{\large\today}
+	\vfill
+\end{titlepage}	
+	
+\vspace*{0.25cm} %Permet de tricher sur les "vertical" spaces. De même \hspace*{} peut être utilisé pour les espaces horizontaux.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TABLE DES MATIÈRES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\tableofcontents
+
+\newpage
+
+
+
+\subfile{chapters/accronymes}
+\subfile{chapters/introduction}
+\subfile{chapters/approche}
+\subfile{chapters/implementation}
+\subfile{chapters/conclusion}
+\subfile{chapters/appendix}
+
+\newpage %Nouvelle page...
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bibliographie
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\addcontentsline{toc}{section}{Bibliographie} %Pour ajouter à la table des matières
+\bibliographystyle{ieeetr}
+% \nocite{*}
+% \bibliography{biblio.bib}
+
+\end{document}

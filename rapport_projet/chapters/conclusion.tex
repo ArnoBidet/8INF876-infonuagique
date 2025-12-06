@@ -1,0 +1,16 @@
+\section{Conclusion}
+
+Au terme de ce projet, nous avons pu explorer les défis inhérents aux systèmes distribués appliqués à la robotique mobile.
+
+\textbf{Ce que nous avons appris :}
+La gestion de l'état global dans un système sans leader est complexe. L'approche géométrique (enveloppe convexe) permet de contourner le besoin d'un consensus lourd sur la définition de la zone.
+
+\textbf{Problèmes rencontrés :}
+La synchronisation temporelle est un enjeu majeur. Dans notre simulation, tout est local, mais dans un réseau réel (LoRa), les délais de transmission pourraient créer des "fantômes" (drones perçus à une ancienne position), faussant le calcul de la zone.
+
+\textbf{Recommandations :}
+Pour une mise en production, nous recommandons :
+\begin{itemize}
+    \item L'utilisation de filtres de Kalman pour prédire la position future des voisins et compenser la latence réseau.
+    \item L'intégration d'un mécanisme de "Time-To-Live" (TTL) strict pour les données des voisins afin d'exclure rapidement un drone qui ne communique plus.
+\end{itemize}

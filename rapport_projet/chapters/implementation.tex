@@ -1,0 +1,66 @@
+\section{Implémentation et Tests}
+
+\subsection{Introduction}
+Ce chapitre présente les outils technologiques utilisés pour la preuve de concept (PoC) et détaille l'implémentation de l'algorithme critique de délimitation de zone.
+
+\subsection{Outils d'implémentation}
+Pour réaliser ce prototype, nous avons utilisé :
+\begin{itemize}
+    \item \textbf{Langage :} Python 3.11 (backend et logique algorithmique).
+    \item \textbf{Web Framework :} Flask (pour servir l'API de l'état des drones).
+    \item \textbf{Visualisation :} Leaflet.js (cartographie) et Chart.js (graphiques temps réel).
+    \item \textbf{Conteneurisation :} Docker et Docker Compose pour orchestrer l'application web et la simulation.
+\end{itemize}
+
+\subsection{Approche prise pour l'implémentation}
+
+\subsubsection{Calcul de l'Enveloppe Convexe}
+Le cœur du système repose sur l'algorithme de la \textit{Chaîne Monotone} (Monotone Chain) pour calculer l'enveloppe convexe des positions des drones. C'est cette enveloppe qui définit la "zone sûre" à l'instant $t$.
+
+Voici l'extrait du code implémenté dans \texttt{app.py} :
+
+\begin{lstlisting}[language=Python, caption=Algorithme Monotone Chain Convex Hull]
+def monotonic_chain_convex_hull(points):
+    # Tri des points par coordonnee x, puis y
+    pts = sorted(points)
+    if len(pts) <= 1:
+        return pts
+
+    # Produit vectoriel pour determiner l'orientation
+    def cross(o, a, b):
+        return (a[0]-o[0]) * (b[1]-o[1]) - (a[1]-o[1]) * (b[0]-o[0])
+
+    # Construction de la partie inferieure
+    lower = []
+    for p in pts:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
+            lower.pop()
+        lower.append(p)
+
+    # Construction de la partie superieure
+    upper = []
+    for p in reversed(pts):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
+            upper.pop()
+        upper.append(p)
+
+    # Concatenation (le dernier point est duplique)
+    hull = lower[:-1] + upper[:-1]
+    return hull
+\end{lstlisting}
+
+\subsubsection{Simulation de mouvement}
+En l'absence de drones physiques, une simulation a été intégrée. La fonction \texttt{simulated\_drones} génère des trajectoires circulaires pour valider que l'enveloppe convexe s'adapte bien au mouvement.
+
+\subsection{Discussion des résultats}
+L'application web permet de visualiser en temps réel :
+\begin{enumerate}
+    \item La position des drones (marqueurs bleus).
+    \item La zone de sécurité calculée dynamiquement (polygone orange).
+    \item Le nombre d'entités "In-Zone" vs "Out-Zone" via des graphiques.
+\end{enumerate}
+
+Le test a démontré que lorsque les drones (simulés) se déplacent, le polygone se met à jour instantanément (fréquence de rafraîchissement de 1.5s dans le frontend), validant l'approche de zone émergente.
+
+\subsection{Conclusion}
+L'implémentation valide la faisabilité d'un géofencing calculé à la volée sur des nœuds mobiles. L'algorithme est suffisamment léger pour tourner sur des microcontrôleurs embarqués.
