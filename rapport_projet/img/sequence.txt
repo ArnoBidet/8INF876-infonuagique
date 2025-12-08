@@ -1,31 +1,84 @@
 sequenceDiagram
-    participant D1 as Drone Controller 1
-    participant C1 as Comms Protocol 1
-    participant C2 as Comms Protocol 2
-    participant D2 as Drone Controller 2
-    participant ZE as Zone Estimator
-    participant GF as Geofencing Logic
+    participant D1 as Drone 1
+    participant MQTT as MQTT Broker
+    participant D2 as Drone 2 (Leader)
+    participant V as Vache Publisher
+    participant W as Web App
     
     %% Initialisation
-    D1->>C1: start_discovery()
-    D2->>C2: start_discovery()
+    Note over D1,W: Initialisation du système
+    D1->>MQTT: connect()
+    D2->>MQTT: connect()
+    V->>MQTT: connect()
+    W->>MQTT: connect()
     
-    %% Diffusion de position
-    loop Position Broadcast
-        D1->>C1: broadcast_position(pos1)
-        C1->>C2: [BLE/WiFi/LoRa] position_msg
-        C2->>D2: receive position
-        D2->>ZE: update_neighbor(drone1_info)
+    D1->>MQTT: subscribe(drones/positions)
+    D1->>MQTT: subscribe(vaches/positions)
+    D2->>MQTT: subscribe(drones/positions)
+    D2->>MQTT: subscribe(vaches/positions)
+    W->>MQTT: subscribe(drones/zone)
+    W->>MQTT: subscribe(vaches/positions)
+    
+    %% Diffusion de positions des drones
+    loop Toutes les 3 secondes
+        Note over D1: generate_single_drone()
+        D1->>MQTT: publish(drones/positions, {drone_id, lat, lng, radius})
+        MQTT->>D2: receive drone position
+        Note over D2: Mise à jour other_drones
+        
+        Note over D2: generate_single_drone()
+        D2->>MQTT: publish(drones/positions, {drone_id, lat, lng, radius})
+        MQTT->>D1: receive drone position
+        Note over D1: Mise à jour other_drones
     end
     
-    %% Estimation de zone et Correction
-    D2->>ZE: compute_convex_hull()
-    ZE-->>D2: hull_positions
-    D2->>GF: is_outside_zone(current_pos)
-    
-    alt Drone outside zone
-        GF-->>D2: true (outside)
-        D2->>GF: generate_correction_vector()
-        GF-->>D2: correction_vector
-        D2->>D2: apply_correction()
+    %% Publication des vaches
+    loop Toutes les 5 secondes
+        Note over V: CowHerd.update()
+        Note over V: Calcul flocking behavior
+        V->>MQTT: publish(vaches/positions, {cows: [...]})
+        MQTT->>D1: receive cow positions
+        MQTT->>D2: receive cow positions
+        MQTT->>W: receive cow positions
+        Note over W: Mise à jour current_cows
     end
+    
+    %% Élection du leader et calcul de zone
+    alt D2 est le leader (ID minimum)
+        Note over D2: is_leader() = true
+        D2->>D2: collect all drone positions
+        D2->>D2: compute_convex_hull(all_drones)
+        D2->>D2: calculate zone center
+        D2->>MQTT: publish(drones/zone, {polygon, center, drones})
+        MQTT->>W: receive zone update
+        Note over W: Mise à jour current_zone et current_drones
+        W->>W: update history (in/out counts)
+    else D1 n'est pas le leader
+        Note over D1: is_leader() = false
+        Note over D1: Ne calcule pas la zone
+    end
+    
+    %% Vérification des vaches hors zone
+    Note over V: check_zone_status(zone_polygon)
+    loop Pour chaque vache
+        V->>V: is_point_in_polygon(cow.position, zone)
+        alt Vache hors zone
+            Note over V: cow.outside_zone = True
+            Note over V: return_to_zone() force appliquée
+        else Vache dans la zone
+            Note over V: cow.outside_zone = False
+        end
+    end
+    
+    %% Détection d'alerte
+    alt Vaches détectées hors zone
+        Note over D2: Compte vaches outside_zone
+        D2->>D2: log alerte
+    end
+    
+    %% Affichage Web
+    W->>W: render map avec Leaflet.js
+    Note over W: Affiche drones (bleus)
+    Note over W: Affiche vaches (vertes/rouges)
+    Note over W: Affiche zone (polygone orange)
+    Note over W: Affiche graphiques temps réel

@@ -1,23 +1,83 @@
 stateDiagram-v2
-    [*] --> Initializing : start()
+    [*] --> Initializing : Démarrage du système
     
-    Initializing --> Discovering : protocol.start_discovery()
-    Discovering --> Operating : neighbors found
+    Initializing --> ConnectingMQTT : Configuration paramètres
+    note right of ConnectingMQTT
+        Connexion au broker MQTT
+        Abonnement aux topics
+    end note
+    
+    ConnectingMQTT --> Operating : Connexion établie
     
     state Operating {
-        [*] --> InZone
-        InZone --> AtBorder : position analysis
-        AtBorder --> InZone : move inward
-        AtBorder --> OutOfZone : drift outward
-        OutOfZone --> Correcting : generate correction
-        Correcting --> InZone : apply correction
+        [*] --> DiscoveringPeers
         
-        state InZone {
-            [*] --> Monitoring
-            Monitoring --> AlertingExit : neighbor exit
-            AlertingExit --> Monitoring : alert sent
+        state DiscoveringPeers {
+            [*] --> WaitingForDrones
+            WaitingForDrones --> ReceivingPositions : positions reçues
+            ReceivingPositions --> UpdatingNeighbors : mise à jour other_drones
+            UpdatingNeighbors --> WaitingForDrones : cleanup inactifs
         }
+        
+        DiscoveringPeers --> PublishingPosition : timer 3s
+        
+        state PublishingPosition {
+            [*] --> GeneratingPosition
+            GeneratingPosition --> CalculatingMovement : generate_single_drone()
+            CalculatingMovement --> Broadcasting : MQTT publish
+            Broadcasting --> [*]
+        }
+        
+        PublishingPosition --> LeadershipCheck : positions publiées
+        
+        state LeadershipCheck {
+            [*] --> CheckingLeadership
+            CheckingLeadership --> NotLeader : ID > min(all_ids)
+            CheckingLeadership --> IsLeader : ID == min(all_ids)
+            
+            state IsLeader {
+                [*] --> CollectingDrones
+                CollectingDrones --> ComputingZone : convex_hull()
+                ComputingZone --> PublishingZone : MQTT publish zone
+                PublishingZone --> [*]
+            }
+            
+            state NotLeader {
+                [*] --> Listening
+                note right of Listening
+                    Écoute des messages
+                    Pas de calcul de zone
+                end note
+            }
+        }
+        
+        LeadershipCheck --> MonitoringCows : zone calculée/reçue
+        
+        state MonitoringCows {
+            [*] --> ReceivingCowData
+            ReceivingCowData --> CheckingZoneStatus : cow positions
+            CheckingZoneStatus --> DetectingOutside : vérification in/out
+            DetectingOutside --> LoggingAlerts : vaches hors zone
+            DetectingOutside --> NoAlert : toutes dans zone
+            LoggingAlerts --> [*]
+            NoAlert --> [*]
+        }
+        
+        MonitoringCows --> DiscoveringPeers : cycle continu
     }
     
-    Operating --> Stopped : stop()
+    Operating --> Reconnecting : perte connexion MQTT
+    Reconnecting --> Operating : reconnexion réussie
+    Reconnecting --> Stopped : échec reconnexion
+    
+    Operating --> Stopped : arrêt demandé
     Stopped --> [*]
+    
+    note left of Operating
+        Cycle principal:
+        1. Publier position toutes les 3s
+        2. Recevoir positions autres drones
+        3. Élection leader automatique
+        4. Leader calcule zone (convex hull)
+        5. Monitoring vaches hors zone
+    end note

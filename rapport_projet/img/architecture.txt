@@ -1,17 +1,62 @@
-graph TD
-    subgraph Drone["Drone (Entité Autonome)"]
-        A[GPS / IMU<br/>Position]
-        B[P2P Communication<br/>BLE / WiFi-Direct / LoRa]
-        C[Neighbor Discovery]
-        D[Local Zone Estimation<br/>Convex Hull / Barycentre]
-        E[Distributed Geofencing Logic]
-        F[Local Alerts / Corrections]
+graph TB
+    subgraph WebApp["Service Web (Flask)"]
+        W1[Interface Web Leaflet.js]
+        W2[API REST /api/state]
+        W3[Historique temps réel]
+        W4[Abonné MQTT]
     end
-
-    A --> C
-    C --> D
-    D --> E
-    E --> F
-    B <---> C
-    B <---> D
-    B <---> E
+    
+    subgraph MQTTBroker["Broker MQTT (Mosquitto)"]
+        M1[Topic: drones/positions]
+        M2[Topic: vaches/positions]
+        M3[Topic: drones/zone]
+    end
+    
+    subgraph DroneServices["Services Drones (x4)"]
+        DA[Position GPS]
+        DB[Génération mouvement]
+        DC[Publication position]
+        DD[Réception autres drones]
+        DE[Élection Leader automatique]
+        DF[Calcul Enveloppe Convexe<br/>si Leader]
+        DG[Publication Zone<br/>si Leader]
+        DH[Écoute vaches]
+    end
+    
+    subgraph VacheService["Service Vaches"]
+        V1[CowHerd Manager]
+        V2[Flocking Behavior]
+        V3[Détection hors zone]
+        V4[Publication positions]
+    end
+    
+    %% Flux principaux
+    DA --> DB
+    DB --> DC
+    DC -->|publish| M1
+    M1 -->|subscribe| DD
+    DD --> DE
+    DE -->|si ID minimum| DF
+    DF --> DG
+    DG -->|publish| M3
+    
+    M2 -->|subscribe| DH
+    
+    %% Vaches vers MQTT
+    V1 --> V2
+    V2 --> V3
+    V3 --> V4
+    V4 -->|publish| M2
+    M2 -->|subscribe| W4
+    
+    %% Zone vers Web et Vaches
+    M3 -->|subscribe| W4
+    M3 -->|subscribe| V3
+    
+    %% Web affichage
+    W4 --> W1
+    W4 --> W3
+    
+    style DroneServices fill:#ffcccc
+    style MQTTBroker fill:#cce5ff
+    style WebApp fill:#ccffcc

@@ -3,54 +3,138 @@ classDiagram
     class Position {
         +float lat
         +float lng
-        +float altitude
         +datetime timestamp
         +distance_to(Position) float
     }
     
+    class Vector2D {
+        +float x
+        +float y
+        +__add__(Vector2D) Vector2D
+        +__sub__(Vector2D) Vector2D
+        +__mul__(scalar) Vector2D
+        +magnitude() float
+        +normalize() Vector2D
+        +limit(max_force) Vector2D
+    }
+    
     class DroneInfo {
         +string drone_id
-        +Position position
-        +datetime last_seen
-        +float signal_strength
-        +is_active(int) bool
+        +dict data
+        +float timestamp
+        +float lat
+        +float lng
+        +int radius
     }
     
-    %% Estimation de zone locale
-    class LocalZoneEstimator {
-        -Dict~string,DroneInfo~ neighbors
-        +update_neighbor(DroneInfo) void
-        +cleanup_inactive_neighbors(int) void
-        +compute_convex_hull() List~Position~
-        +compute_local_centroid() Position
-        +estimate_zone_boundary() List~Position~
+    %% Communication MQTT
+    class MQTTCommunication {
+        +string broker_address
+        +int port
+        +Client client
+        +on_connect(client, userdata, flags, rc, properties) void
+        +on_message(client, userdata, msg) void
+        +publish(topic, message, qos) void
+        +subscribe(topic) void
+        +loop_forever() void
     }
     
-    %% Logique de géofencing
-    class GeofencingLogic {
-        -string drone_id
-        -LocalZoneEstimator zone_estimator
-        -Dict~string,Alert~ alert_history
-        +is_at_border(Position) bool
-        +is_outside_zone(Position) bool
-        +detect_neighbor_exit() List~Alert~
-        +should_relay_alert(Alert) bool
-        +generate_correction_vector(Position) Tuple~float,float~
+    %% Géométrie et calculs
+    class GeometryCalculator {
+        +cross_product(o, a, b) float
+        +convex_hull(entities) List
+        +compute_convex_hull(points) List
     }
     
-    %% Contrôleur principal
-    class DroneController {
-        -string drone_id
-        -Position current_position
-        -LocalZoneEstimator zone_estimator
-        -GeofencingLogic geofencing
-        +start() void
-        +update_position(Position) void
-        -_geofencing_loop() void
+    %% Service de détection de vaches
+    class CowDetectionService {
+        +detect_cow_in_hull(hull) Tuple
+        +print_alert(cows) void
+        +alert(hull) void
     }
     
-    DroneInfo --> Position : contains
-    LocalZoneEstimator --> DroneInfo : manages
-    GeofencingLogic --> LocalZoneEstimator : uses
-    DroneController --> LocalZoneEstimator : contains
-    DroneController --> GeofencingLogic : contains
+    %% Logique de drone
+    class DroneSubscriber {
+        -string DRONE_ID
+        -float DRONE_START_LAT
+        -float DRONE_START_LNG
+        -int DRONE_RADIUS
+        -dict other_drones
+        -Lock drone_lock
+        -float start_time
+        +generate_single_drone() dict
+        +is_leader() bool
+        +calculate_and_publish_zone(client, cows_data) void
+        +publish_drone_positions_periodically() void
+    }
+    
+    %% Comportement de troupeau de vaches
+    class Cow {
+        +string id
+        +Vector2D position
+        +Vector2D velocity
+        +Vector2D acceleration
+        +float max_speed
+        +float max_force
+        +float perception_radius
+        +float separation_radius
+        +bool outside_zone
+        +float wandering_angle
+        +distance_to(Cow) float
+        +separation(List~Cow~) Vector2D
+        +alignment(List~Cow~) Vector2D
+        +cohesion(List~Cow~) Vector2D
+        +seek(Vector2D) Vector2D
+        +wander() Vector2D
+        +return_to_zone(Vector2D) Vector2D
+        +flock(List~Cow~, Vector2D) void
+        +update() void
+        +to_dict() dict
+    }
+    
+    class CowHerd {
+        -Vector2D field_center
+        -List~Cow~ cows
+        +update(Vector2D) void
+        +check_zone_status(List) void
+        +get_all_cows() List~dict~
+    }
+    
+    %% Service Web
+    class WebApp {
+        +Flask app
+        +List current_cows
+        +List current_drones
+        +List current_zone
+        +deque history
+        +on_mqtt_connect(client, userdata, flags, rc, properties) void
+        +on_mqtt_message(client, userdata, msg) void
+        +render_index() str
+        +get_state() dict
+        +get_history() dict
+    }
+    
+    %% Service principal de drone
+    class DroneService {
+        +analyze_perimeter(entities) Tuple
+        +monitor_and_alert(entities) List
+    }
+    
+    %% Relations
+    DroneSubscriber --> MQTTCommunication : uses
+    DroneSubscriber --> GeometryCalculator : uses
+    DroneSubscriber --> DroneInfo : manages
+    DroneSubscriber --> Position : generates
+    
+    CowHerd --> Cow : manages
+    Cow --> Vector2D : uses
+    
+    WebApp --> MQTTCommunication : uses
+    WebApp --> DroneInfo : displays
+    WebApp --> Cow : displays
+    
+    DroneService --> GeometryCalculator : uses
+    DroneService --> CowDetectionService : uses
+    
+    GeometryCalculator --> Position : processes
+    CowDetectionService --> Cow : detects
