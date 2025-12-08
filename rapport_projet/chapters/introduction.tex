@@ -12,20 +12,23 @@ La problématique principale que nous adressons est la suivante : \textit{Commen
 
 Les défis techniques identifiés sont multiples :
 \begin{itemize}
-    \item \textbf{Absence de leader :} Aucun drone ne possède la "vérité" absolue sur la zone.
-    \item \textbf{Zone mouvante :} La zone à protéger (ex: un cortège, un bateau) se déplace, rendant les géofences statiques obsolètes.
-    \item \textbf{Communication opportuniste :} Les drones communiquent via des protocoles locaux (BLE, WiFi-Direct, LoRa) avec une portée limitée.
+    \item \textbf{Leadership distribué :} Élection automatique et ré-élection transparente des leaders sans coordination externe.
+    \item \textbf{Zone émergente :} La zone de surveillance émerge dynamiquement des positions des drones actifs.
+    \item \textbf{Communication peer-to-peer :} Les drones se coordonnent via MQTT sans service centralisé.
+    \item \textbf{Tolérance aux pannes :} Résilience maximale face aux défaillances individuelles.
 \end{itemize}
 
 Notre objectif est de permettre aux drones de détecter s'ils s'éloignent trop du groupe (sortie de zone) ou si un voisin quitte la formation, et ce, sans aucune infrastructure au sol.
 
 \subsection{Description du développement}
-Le projet consiste en une implémentation d'un simulateur de drones autonomes. Chaque agent exécute une logique identique lui permettant de :
+Le projet consiste en une implémentation complètement décentralisée d'un système de drones autonomes. Chaque agent exécute une logique distribuée lui permettant de :
 \begin{enumerate}
-    \item Découvrir ses voisins via une simulation de réseau P2P.
-    \item Estimer la forme globale de l'essaim (Enveloppe Convexe).
-    \item Déterminer s'il se trouve à l'intérieur ou à l'extérieur de cette enveloppe.
-    \item Générer des alertes locales.
+    \item Publier sa position individuelle via communication MQTT.
+    \item Découvrir et suivre les positions des autres drones du réseau.
+    \item Participer à l'élection automatique du leader (ID minimum).
+    \item Calculer la zone globale de surveillance (si leader) ou la recevoir.
+    \item S'auto-réorganiser en cas de défaillance d'autres drones.
+    \item Maintenir la cohésion de l'essaim sans coordination externe.
 \end{enumerate}
 
 Le système a été développé en Python pour la logique backend et la simulation, avec une interface de visualisation Web (Flask + Leaflet) pour observer le comportement de l'essaim en temps réel.

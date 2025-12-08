@@ -4,9 +4,17 @@
 Ce chapitre détaille l'architecture logicielle retenue pour répondre aux contraintes de décentralisation, ainsi que les modèles comportementaux des agents (drones).
 
 \subsection{Architecture du système}
-L'architecture repose sur un modèle \textit{Edge Computing} pur, où chaque drone est un nœud de calcul indépendant. Il n'y a pas de base de données partagée ni de coordinateur central.
+L'architecture repose sur un modèle \textit{Edge Computing} pur et complètement décentralisé, où chaque drone est un nœud de calcul indépendant. Il n'y a pas de base de données partagée ni de service coordinateur central.
 
-La zone de vol n'est pas définie par des coordonnées GPS fixes, mais est \textbf{émergente} : elle est le résultat du calcul de l'enveloppe convexe (Convex Hull) des positions de tous les voisins perçus à un instant $t$.
+Le système implémente une coordination peer-to-peer avec :
+\begin{itemize}
+    \item \textbf{Communication MQTT} : Chaque drone publie sa position et écoute les autres
+    \item \textbf{Leadership automatique} : Élection du leader basée sur l'ID minimum
+    \item \textbf{Tolérance aux pannes} : Auto-réorganisation en cas de défaillance
+    \item \textbf{Zone émergente} : L'enveloppe convexe est calculée par le leader uniquement
+\end{itemize}
+
+La zone de vol n'est pas définie par des coordonnées GPS fixes, mais est \textbf{émergente} et calculée de manière distribuée : seul le drone leader calcule l'enveloppe convexe des positions de tous les drones actifs à un instant $t$.
 
 \begin{figure}[H]
     \centering
@@ -27,12 +35,15 @@ Comme illustré dans la Figure \ref{fig:arch}, chaque drone possède ses propres
 Le diagramme de classes (Figure \ref{fig:classes}) met en évidence la séparation entre la gestion des données brutes (\texttt{DroneInfo}, \texttt{Position}) et la logique métier (\texttt{LocalZoneEstimator}, \texttt{GeofencingLogic}).
 
 \subsection{Diagrammes de cas d'utilisations}
-Les principaux cas d'utilisation pour un drone autonome sont :
+Les principaux cas d'utilisation pour un drone autonome dans un système décentralisé sont :
 \begin{itemize}
-    \item \textbf{Diffuser sa position :} Envoyer périodiquement ses coordonnées aux voisins.
-    \item \textbf{Calculer la zone locale :} Agréger les positions reçues pour définir la frontière virtuelle.
-    \item \textbf{Détecter une sortie :} Vérifier si sa propre position est hors de l'enveloppe convexe.
-    \item \textbf{Lancer une alerte :} Prévenir les voisins en cas d'anomalie ou de perte de signal.
+    \item \textbf{Diffuser sa position :} Publier périodiquement ses coordonnées via MQTT (toutes les 3 secondes).
+    \item \textbf{Écouter les autres drones :} Recevoir et stocker les positions des autres drones actifs.
+    \item \textbf{Élire un leader :} Participer au processus d'élection automatique basé sur l'ID minimum.
+    \item \textbf{Calculer la zone globale :} Si leader, calculer l'enveloppe convexe de tous les drones.
+    \item \textbf{Publier la zone :} Si leader, diffuser la zone de surveillance calculée.
+    \item \textbf{Auto-nettoyage :} Supprimer les drones inactifs (timeout de 15 secondes).
+    \item \textbf{Gérer les défaillances :} Réélire un nouveau leader si l'actuel disparaît.
 \end{itemize}
 
 \subsection{Diagrammes de séquences}
@@ -59,5 +70,15 @@ Chaque drone évolue selon un automate à états finis pour gérer son statut au
 
 L'état critique est \texttt{Operating}, qui se subdivise en sous-états de surveillance (\texttt{InZone}, \texttt{AtBorder}, \texttt{OutOfZone}).
 
-\subsection{Conclusion}
-L'architecture décentralisée permet une grande résilience : la perte d'un drone ne compromet pas la mission des autres, la zone se "refermant" simplement autour des membres restants.
+\subsection{Avantages de l'approche décentralisée}
+L'architecture complètement décentralisée apporte plusieurs bénéfices critiques :
+\begin{itemize}
+    \item \textbf{Résilience maximale :} Aucun point de défaillance unique, pas de service centralisé critique
+    \item \textbf{Auto-organisation :} Les drones s'organisent automatiquement sans intervention externe
+    \item \textbf{Scalabilité dynamique :} Ajout/suppression de drones à chaud sans reconfiguration
+    \item \textbf{Leadership adaptatif :} Élection automatique et ré-élection en cas de panne du leader
+    \item \textbf{Performance optimisée :} Seul le leader effectue les calculs coûteux (enveloppe convexe)
+    \item \textbf{Tolérance aux pannes :} La mission continue même avec des défaillances multiples
+\end{itemize}
+
+La zone se "referme" automatiquement autour des membres restants lors de la perte d'un drone, sans nécessiter de recalibrage manuel.
