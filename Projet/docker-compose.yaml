@@ -37,8 +37,10 @@ services:
       - mqtt-broker
     environment:
       - DRONE_ID=1
-      - MQTT_BROKER=mqtt-broker 
-    
+      - MQTT_BROKER=mqtt-broker
+      - DRONE_START_LAT=46.9131  # Position de départ (coin sud-ouest)
+      - DRONE_START_LNG=-71.2085
+      - DRONE_RADIUS=800
     command: ["python", "-u", "drone_subscriber.py"] 
     restart: unless-stopped
 
@@ -49,8 +51,10 @@ services:
       - mqtt-broker
     environment:
       - DRONE_ID=2
-      - MQTT_BROKER=mqtt-broker 
-    
+      - MQTT_BROKER=mqtt-broker
+      - DRONE_START_LAT=46.9131  # Position de départ (coin sud-est)
+      - DRONE_START_LNG=-71.2045
+      - DRONE_RADIUS=1000
     command: ["python", "-u", "drone_subscriber.py"] 
     restart: unless-stopped
 
@@ -61,11 +65,26 @@ services:
       - mqtt-broker
     environment:
       - DRONE_ID=3
-      - MQTT_BROKER=mqtt-broker 
-    
+      - MQTT_BROKER=mqtt-broker
+      - DRONE_START_LAT=46.9171  # Position de départ (coin nord-est)
+      - DRONE_START_LNG=-71.2045
+      - DRONE_RADIUS=1200
     command: ["python", "-u", "drone_subscriber.py"] 
     restart: unless-stopped
 
+  drone4:
+    build:
+      context: ./drone
+    depends_on:
+      - mqtt-broker
+    environment:
+      - DRONE_ID=4
+      - MQTT_BROKER=mqtt-broker
+      - DRONE_START_LAT=46.9171  # Position de départ (coin nord-ouest)
+      - DRONE_START_LNG=-71.2085
+      - DRONE_RADIUS=900
+    command: ["python", "-u", "drone_subscriber.py"] 
+    restart: unless-stopped
 
   vache:
     build:

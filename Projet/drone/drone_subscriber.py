@@ -14,15 +14,23 @@ TOPIC_COW_POSITIONS = "vaches/positions"
 TOPIC_ZONE_UPDATE = "drones/zone"
 TOPIC_DRONE_POSITIONS = "drones/positions"
 
-print(f"Drone {DRONE_ID} - Broker MQTT configuré à l'adresse : {BROKER_ADDRESS}:{PORT}")
+# Drone individual parameters from environment variables
+DRONE_START_LAT = float(os.environ.get("DRONE_START_LAT", "46.9131"))
+DRONE_START_LNG = float(os.environ.get("DRONE_START_LNG", "-71.2085"))
+DRONE_RADIUS = int(os.environ.get("DRONE_RADIUS", "800"))
 
-# Drone convoy parameters - moved in formation
-FIELD_CENTER = (46.9131, -71.2085)  # 10km north of Quebec City
-convoy_drones = []
+print(f"Drone {DRONE_ID} - Broker MQTT configuré à l'adresse : {BROKER_ADDRESS}:{PORT}")
+print(f"Drone {DRONE_ID} - Position de départ: ({DRONE_START_LAT}, {DRONE_START_LNG}), Rayon: {DRONE_RADIUS}m")
+
 start_time = None  # Track start time for relative movement
 
-def generate_convoy_drones(t=None):
-    """Generate drone convoy positions moving in formation"""
+# Décentralized coordination - each drone maintains other drones' positions
+other_drones = {}  # {drone_id: {'data': drone_data, 'timestamp': timestamp}}
+import threading
+drone_lock = threading.Lock()
+
+def generate_single_drone():
+    """Generate single drone position with movement pattern"""
     global start_time
     
     if start_time is None:
@@ -31,41 +39,27 @@ def generate_convoy_drones(t=None):
     # Calculate elapsed time in seconds since start
     elapsed_time = time.time() - start_time
     
-    cx, cy = FIELD_CENTER
-    
-    # Move convoy very slowly westward (much slower than cows)
+    # Move drone slowly westward
     westward_speed = 0.00005  # degrees per second (très lent)
     west_offset = -westward_speed * elapsed_time
     
-    # Square formation parameters
-    formation_size = 0.004  # Size of square formation in degrees
+    # Simple circular patrol pattern around starting position
+    patrol_radius = 0.002  # Small patrol radius in degrees
+    patrol_speed = 0.1  # radians per second
+    angle = patrol_speed * elapsed_time
     
-    drones = []
-    num_drones = 4  # Convoy of 4 drones
+    lat_offset = patrol_radius * math.cos(angle)
+    lng_offset = patrol_radius * math.sin(angle)
     
-    # Square formation positions (corners of a square)
-    square_positions = [
-        (-formation_size/2, -formation_size/2),  # Bottom-left
-        (formation_size/2, -formation_size/2),   # Bottom-right  
-        (formation_size/2, formation_size/2),    # Top-right
-        (-formation_size/2, formation_size/2)    # Top-left
-    ]
+    lat = DRONE_START_LAT + lat_offset
+    lng = DRONE_START_LNG + west_offset + lng_offset
     
-    for i in range(num_drones):
-        # Get square formation offset
-        lat_offset, lng_offset = square_positions[i]
-        
-        lat = cx + lat_offset
-        lng = cy + west_offset + lng_offset
-        
-        drones.append({
-            'id': f'drone_{DRONE_ID}_{i}',  # Include drone ID for uniqueness
-            'lat': lat,
-            'lng': lng,
-            'radius': 800 + i * 200  # Coverage radius in meters
-        })
-    
-    return drones
+    return {
+        'id': f'drone_{DRONE_ID}',
+        'lat': lat,
+        'lng': lng,
+        'radius': DRONE_RADIUS
+    }
 
 def compute_convex_hull(points):
     """Compute convex hull using monotonic chain algorithm"""
@@ -94,6 +88,13 @@ def compute_convex_hull(points):
     hull = lower[:-1] + upper[:-1]
     return [{'lat': p[0], 'lng': p[1]} for p in hull]
 
+def is_leader():
+    """Determine if this drone should act as leader for zone calculation"""
+    # Simple leadership: drone with lowest ID that has seen other drones
+    with drone_lock:
+        all_drone_ids = [DRONE_ID] + list(other_drones.keys())
+        return DRONE_ID == min(all_drone_ids)
+
 # ----------------- Fonctions de Callback MQTT -----------------
 
 def on_connect(client, userdata, flags, rc, properties):
@@ -113,75 +114,112 @@ def on_message(client, userdata, msg):
             payload = json.loads(msg.payload.decode("utf-8"))
             cows_data = payload.get('cows', [])
             
-            # Generate current drone positions
-            current_drones = generate_convoy_drones()
+            # Only leader calculates and publishes zone when cows are detected
+            if is_leader():
+                calculate_and_publish_zone(client, cows_data)
+        
+        elif msg.topic == TOPIC_DRONE_POSITIONS:
+            # Store other drones' positions for decentralized coordination
+            payload = json.loads(msg.payload.decode("utf-8"))
+            other_drone_id = payload.get('drone_id')
+            drone_data = payload.get('drone', {})
+            timestamp = payload.get('timestamp', time.time())
             
-            # Compute surveillance zone (convex hull of drones)
-            if len(current_drones) >= 3:
-                zone_polygon = compute_convex_hull(current_drones)
-                
-                # Calculate zone center
-                if zone_polygon:
-                    zone_center_lat = sum(p['lat'] for p in zone_polygon) / len(zone_polygon)
-                    zone_center_lng = sum(p['lng'] for p in zone_polygon) / len(zone_polygon)
-                    
-                    # Publish zone update for cows
-                    zone_update = {
-                        'center': {'lat': zone_center_lat, 'lng': zone_center_lng},
-                        'polygon': zone_polygon,
-                        'drones': current_drones,
-                        'timestamp': time.time()
+            if other_drone_id != DRONE_ID and drone_data:
+                with drone_lock:
+                    other_drones[other_drone_id] = {
+                        'data': drone_data,
+                        'timestamp': timestamp
                     }
-                    
-                    client.publish(TOPIC_ZONE_UPDATE, json.dumps(zone_update), qos=1)
-                    
-                    # Count cows outside zone
-                    outside_cows = [cow for cow in cows_data if cow.get('outside_zone', False)]
-                    
-                    print(f"[{time.strftime('%H:%M:%S')}] Drone {DRONE_ID}: Zone mise à jour, "
-                          f"{len(cows_data)} vaches détectées, {len(outside_cows)} hors zone")
+                
+                print(f"[{time.strftime('%H:%M:%S')}] Drone {DRONE_ID}: Position reçue du drone {other_drone_id} "
+                      f"lat={drone_data.get('lat', 0):.6f}, lng={drone_data.get('lng', 0):.6f}")
         
     except Exception as e:
         print(f"Erreur lors du traitement du message : {e}")
 
+def calculate_and_publish_zone(client, cows_data):
+    """Calculate surveillance zone based on all known drone positions"""
+    try:
+        # Get current drone position
+        current_drone = generate_single_drone()
+        
+        # Collect all active drone positions
+        all_drones = [current_drone]
+        
+        with drone_lock:
+            # Clean up old drone positions (older than 15 seconds)
+            current_time = time.time()
+            active_drones = {
+                drone_id: info for drone_id, info in other_drones.items()
+                if current_time - info['timestamp'] < 15
+            }
+            other_drones.clear()
+            other_drones.update(active_drones)
+            
+            # Add active other drones
+            for info in active_drones.values():
+                all_drones.append(info['data'])
+        
+        # Calculate zone if we have enough drones
+        if len(all_drones) >= 3:
+            zone_polygon = compute_convex_hull(all_drones)
+            
+            # Calculate zone center
+            if zone_polygon:
+                zone_center_lat = sum(p['lat'] for p in zone_polygon) / len(zone_polygon)
+                zone_center_lng = sum(p['lng'] for p in zone_polygon) / len(zone_polygon)
+                
+                # Publish zone update
+                zone_update = {
+                    'center': {'lat': zone_center_lat, 'lng': zone_center_lng},
+                    'polygon': zone_polygon,
+                    'drones': all_drones,
+                    'timestamp': time.time(),
+                    'leader_drone_id': DRONE_ID,
+                    'total_drones': len(all_drones)
+                }
+                
+                client.publish(TOPIC_ZONE_UPDATE, json.dumps(zone_update), qos=1)
+                
+                # Count cows outside zone (simple approximation)
+                outside_cows = [cow for cow in cows_data if cow.get('outside_zone', False)]
+                
+                print(f"[{time.strftime('%H:%M:%S')}] Drone {DRONE_ID} (LEADER): Zone publiée avec {len(all_drones)} drones, "
+                      f"{len(cows_data)} vaches détectées, {len(outside_cows)} hors zone")
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] Drone {DRONE_ID}: Pas assez de drones pour former une zone ({len(all_drones)})")
+            
+    except Exception as e:
+        print(f"Erreur lors du calcul de zone : {e}")
+
 
 
 def publish_drone_positions_periodically():
-    """Publish drone positions and zone information periodically"""
+    """Publish individual drone position periodically"""
     while True:
         try:
-            # Only drone 1 publishes the zone information to avoid conflicts
-            if DRONE_ID == "1":
-                # Generate current drone positions
-                current_drones = generate_convoy_drones()
-                
-                # Compute surveillance zone (convex hull of drones)
-                if len(current_drones) >= 3:
-                    zone_polygon = compute_convex_hull(current_drones)
-                    
-                    # Calculate zone center
-                    if zone_polygon:
-                        zone_center_lat = sum(p['lat'] for p in zone_polygon) / len(zone_polygon)
-                        zone_center_lng = sum(p['lng'] for p in zone_polygon) / len(zone_polygon)
-                        
-                        # Publish zone update
-                        zone_update = {
-                            'center': {'lat': zone_center_lat, 'lng': zone_center_lng},
-                            'polygon': zone_polygon,
-                            'drones': current_drones,
-                            'timestamp': time.time(),
-                            'drone_id': DRONE_ID
-                        }
-                        
-                        client.publish(TOPIC_ZONE_UPDATE, json.dumps(zone_update), qos=1)
-                        
-                        print(f"[{time.strftime('%H:%M:%S')}] Drone {DRONE_ID}: Zone publiée avec {len(current_drones)} drones, zone: {len(zone_polygon)} points")
-                else:
-                    print(f"[{time.strftime('%H:%M:%S')}] Drone {DRONE_ID}: Pas assez de drones pour former une zone")
-            else:
-                print(f"[{time.strftime('%H:%M:%S')}] Drone {DRONE_ID}: En attente (seul drone1 publie la zone)")
+            # Generate current drone position
+            current_drone = generate_single_drone()
             
-            time.sleep(3)  # Publish every 3 seconds
+            # Publish individual drone position
+            drone_position = {
+                'drone': current_drone,
+                'timestamp': time.time(),
+                'drone_id': DRONE_ID
+            }
+            
+            client.publish(TOPIC_DRONE_POSITIONS, json.dumps(drone_position), qos=1)
+            
+            # Show leadership status
+            leader_status = " (LEADER)" if is_leader() else ""
+            active_count = len(other_drones) + 1  # +1 for self
+            
+            print(f"[{time.strftime('%H:%M:%S')}] Drone {DRONE_ID}{leader_status}: Position publiée "
+                  f"lat={current_drone['lat']:.6f}, lng={current_drone['lng']:.6f}, "
+                  f"rayon={current_drone['radius']}m, drones actifs: {active_count}")
+            
+            time.sleep(3)  # Publish every 3 seconds for better coordination
             
         except Exception as e:
             print(f"Erreur lors de la publication : {e}")
